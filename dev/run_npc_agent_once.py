@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 
 from stery.agents.npc_agent import NPCAgent
 from stery.application.game_runtime import GameRuntime
+from stery.application.npc_interaction_service import NPCInteractionService
 from stery.application.script_loader import load_script
 from stery.llm.base import LLMClient
 
@@ -12,35 +13,29 @@ def main():
     script = load_script("../scripts/mansion_murder.json")
 
     runtime = GameRuntime(script)
-    state = runtime.start()
+    runtime.start()
 
-    llm_client = LLMClient()
-    agent = NPCAgent(script=script, llm_client=llm_client)
+    llm_client = LLMClient(temperature=0.1)
+    npc_agent = NPCAgent(script=script, llm_client=llm_client)
 
-    player_question = "案发当晚 22 点左右，你在哪里？"
-
-    runtime.record_question(
-        target_character_id="npc_butler",
-        question=player_question,
+    service = NPCInteractionService(
+        runtime=runtime,
+        npc_agent=npc_agent,
     )
 
-    answer = agent.answer(
-        state=state,
+    result = service.ask_npc(
         target_character_id="npc_butler",
-        player_question=player_question,
-    )
-
-    runtime.record_npc_answer(
-        target_character_id="npc_butler",
-        answer=answer,
+        question="案发当晚 22 点左右，你在哪里？",
     )
 
     print("NPC 回答：")
-    print(answer)
+    print(result.npc_answer)
 
-    print("\n当前问答历史：")
-    print(state.question_history)
-    print(state.answer_history)
+    print("\n本轮交互：")
+    print(result)
+
+    print("\n当前状态：")
+    print(runtime.state)
 
 
 if __name__ == "__main__":
