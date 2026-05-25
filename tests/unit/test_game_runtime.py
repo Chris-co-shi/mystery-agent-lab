@@ -5,16 +5,14 @@ import pytest
 from stery.application.game_runtime import GameRuntime
 from stery.application.script_loader import load_script
 from stery.domain.enums import GamePhase
-
+from stery.script_repository import LocalFileScriptRepository
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-from stery.config.paths import MANSION_MURDER_SCRIPT
-
-SCRIPT_PATH = MANSION_MURDER_SCRIPT
+SCRIPT_PATH = "mansion_murder"
+script = LocalFileScriptRepository().get_script(SCRIPT_PATH)
 
 
 def build_runtime() -> GameRuntime:
-    script = load_script(SCRIPT_PATH)
     return GameRuntime(script)
 
 

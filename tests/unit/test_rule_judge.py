@@ -6,16 +6,15 @@ from stery.application.game_runtime import GameRuntime
 from stery.application.rule_judge import RuleJudge
 from stery.application.script_loader import load_script
 from stery.domain.state import FinalVote
-
+from stery.script_repository import LocalFileScriptRepository
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-from stery.config.paths import MANSION_MURDER_SCRIPT
+SCRIPT_PATH = "mansion_murder"
 
-SCRIPT_PATH = MANSION_MURDER_SCRIPT
+script = LocalFileScriptRepository().get_script(SCRIPT_PATH)
 
 
 def build_judge() -> RuleJudge:
-    script = load_script(SCRIPT_PATH)
     return RuleJudge(script)
 
 
@@ -146,7 +145,6 @@ def test_evaluate_final_vote_unknown_clue_failed():
 
 
 def test_evaluate_final_vote_from_game_runtime_state():
-    script = load_script(SCRIPT_PATH)
     runtime = GameRuntime(script)
     state = runtime.start()
 

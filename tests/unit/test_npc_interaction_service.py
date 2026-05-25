@@ -6,12 +6,12 @@ from stery.application.game_runtime import GameRuntime
 from stery.application.npc_interaction_service import NPCInteractionService
 from stery.application.script_loader import load_script
 from stery.domain.state import GameState
-
+from stery.script_repository import LocalFileScriptRepository
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-from stery.config.paths import MANSION_MURDER_SCRIPT
+SCRIPT_PATH = "mansion_murder"
 
-SCRIPT_PATH = MANSION_MURDER_SCRIPT
+script = LocalFileScriptRepository().get_script(SCRIPT_PATH)
 
 
 class FakeNPCAgent:
@@ -36,7 +36,6 @@ class FakeNPCAgent:
 
 
 def build_runtime() -> GameRuntime:
-    script = load_script(SCRIPT_PATH)
     runtime = GameRuntime(script)
     runtime.start()
     return runtime
@@ -92,7 +91,6 @@ def test_ask_npc_calls_agent_with_state_and_question():
 
 
 def test_ask_npc_requires_game_started():
-    script = load_script(SCRIPT_PATH)
     runtime = GameRuntime(script)
     fake_agent = FakeNPCAgent()
     service = NPCInteractionService(runtime=runtime, npc_agent=fake_agent)

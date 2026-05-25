@@ -3,17 +3,14 @@ from pathlib import Path
 import pytest
 
 from stery.application.clue_manager import ClueManager
-from stery.application.script_loader import load_script
-
+from stery.script_repository import LocalFileScriptRepository
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-from stery.config.paths import MANSION_MURDER_SCRIPT
 
-SCRIPT_PATH = MANSION_MURDER_SCRIPT
+SCRIPT_PATH = "mansion_murder"
 
-
+script = LocalFileScriptRepository().get_script(SCRIPT_PATH)
 def test_get_initial_unlocked_clue_ids_only_contains_public_clues():
-    script = load_script(SCRIPT_PATH)
     clue_manager = ClueManager(script)
 
     unlocked_clue_ids = clue_manager.get_initial_unlocked_clue_ids()
@@ -24,9 +21,7 @@ def test_get_initial_unlocked_clue_ids_only_contains_public_clues():
 
 
 def test_list_available_clues_only_returns_unlocked_clues():
-    script = load_script(SCRIPT_PATH)
     clue_manager = ClueManager(script)
-
     from stery.domain.state import GameState
     from stery.domain.enums import GamePhase
 
@@ -45,7 +40,6 @@ def test_list_available_clues_only_returns_unlocked_clues():
 
 
 def test_unlock_clue_success():
-    script = load_script(SCRIPT_PATH)
     clue_manager = ClueManager(script)
 
     from stery.domain.state import GameState
@@ -66,7 +60,6 @@ def test_unlock_clue_success():
 
 
 def test_unlock_unknown_clue_failed():
-    script = load_script(SCRIPT_PATH)
     clue_manager = ClueManager(script)
 
     from stery.domain.state import GameState

@@ -1,4 +1,7 @@
+import argparse
+
 from bootstrap import bootstrap_project
+
 
 bootstrap_project()
 from dotenv import load_dotenv
@@ -6,16 +9,25 @@ from dotenv import load_dotenv
 from stery.agents.npc_agent import NPCAgent
 from stery.application.game_runtime import GameRuntime
 from stery.application.npc_interaction_service import NPCInteractionService
-from stery.application.script_loader import load_script
 from stery.llm.base import LLMClient
 
-from stery.config.paths import ENV_FILE, MANSION_MURDER_SCRIPT
-
+from stery.config.paths import ENV_FILE
+from stery.script_repository import LocalFileScriptRepository
 load_dotenv(ENV_FILE)
 
 
 def main():
-    script = load_script(MANSION_MURDER_SCRIPT)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--script",
+        required=True,
+        help="剧本 ID，例如 mansion_murder，对应 scripts/mansion_murder.json",
+    )
+
+    args = parser.parse_args()
+
+    repository = LocalFileScriptRepository()
+    script = repository.get_script(args.script)
 
     runtime = GameRuntime(script)
     runtime.start()

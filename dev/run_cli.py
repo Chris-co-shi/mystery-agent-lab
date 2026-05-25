@@ -1,5 +1,6 @@
 from bootstrap import bootstrap_project
 
+
 bootstrap_project()
 from dotenv import load_dotenv
 import argparse
@@ -7,12 +8,11 @@ from stery.agents import NPCAgent
 from stery.application.game_runtime import GameRuntime
 from stery.application.npc_interaction_service import NPCInteractionService
 from stery.application.rule_judge import RuleJudge
-from stery.application.script_loader import load_script
 from stery.interfaces.cli import MysteryCliApp
 from stery.llm.base import LLMClient
 from stery.application.clue_search_service import ClueSearchService
 from stery.config.paths import ENV_FILE
-
+from stery.script_repository import LocalFileScriptRepository
 load_dotenv(ENV_FILE)
 
 
@@ -26,7 +26,8 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    script = load_script(args.script)
+    repository = LocalFileScriptRepository()
+    script = repository.get_script(args.script)
     clue_search_service = ClueSearchService(script)
     runtime = GameRuntime(script)
 

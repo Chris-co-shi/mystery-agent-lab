@@ -5,16 +5,15 @@ import pytest
 from stery.application.clue_search_service import ClueSearchService
 from stery.application.game_runtime import GameRuntime
 from stery.application.script_loader import load_script
-
+from stery.script_repository import LocalFileScriptRepository
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-from stery.config.paths import MANSION_MURDER_SCRIPT
 
-SCRIPT_PATH = MANSION_MURDER_SCRIPT
-
+SCRIPT_PATH = "mansion_murder"
+script = LocalFileScriptRepository().get_script(SCRIPT_PATH)
 
 def build_service_and_state():
-    script = load_script(SCRIPT_PATH)
+
     runtime = GameRuntime(script)
     state = runtime.start()
     service = ClueSearchService(script)

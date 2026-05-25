@@ -4,15 +4,15 @@ import pytest
 
 from stery.application import load_script
 from stery.domain.models import GameScript
+from stery.script_repository import LocalFileScriptRepository
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-from stery.config.paths import MANSION_MURDER_SCRIPT
+SCRIPT_PATH = "mansion_murder"
 
-SCRIPT_PATH = MANSION_MURDER_SCRIPT
+script = LocalFileScriptRepository().get_script(SCRIPT_PATH)
 
 
 def test_load_mansion_murder_script_success():
-    script = load_script(SCRIPT_PATH)
 
     assert isinstance(script, GameScript)
     assert script.id == "mansion_murder_001"
