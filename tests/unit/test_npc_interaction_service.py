@@ -1,10 +1,10 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from stery.application.game_runtime import GameRuntime
 from stery.application.npc_interaction_service import NPCInteractionService
-from stery.application.script_loader import load_script
 from stery.domain.state import GameState
 from stery.script_repository import LocalFileScriptRepository
 
@@ -34,6 +34,40 @@ class FakeNPCAgent:
         )
         return self.answer_text
 
+class FakeNPCResponder:
+    def __init__(self, answer_text: str = "我当时一直在前台。"):
+        self.answer_text = answer_text
+        self.calls: list[dict] = []
+
+    def answer(
+        self,
+        state: GameState,
+        target_character_id: str,
+        player_question: str,
+    ) -> str:
+        self.calls.append(
+            {
+                "state": state,
+                "target_character_id": target_character_id,
+                "player_question": player_question,
+            }
+        )
+        return self.answer_text
+
+
+class FakeNpcGuardrail:
+    def check_question(self, question: str):
+        return SimpleNamespace(
+            should_call_llm=True,
+            prompt_instruction="",
+            fallback_answer=None,
+        )
+
+    def sanitize_answer(self, question: str, answer: str) -> str:
+        return answer
+
+    def build_llm_error_fallback(self) -> str:
+        return "NPC 暂时无法回答。"
 
 def build_runtime() -> GameRuntime:
     runtime = GameRuntime(script)
@@ -133,3 +167,42 @@ def test_ask_npc_respects_question_round_limit():
         )
 
     assert len(fake_agent.calls) == 0
+
+
+def test_ask_npc_should_append_qa_history():
+    # Arrange
+    state = GameState(script_id="mansion_murder")
+    responder = FakeNPCResponder(answer_text="我当时一直在前台。")
+
+    service = NPCInteractionService(
+        state_provider=lambda: state,
+        responder=responder,
+        npc_guardrail=FakeNpcGuardrail(),
+    )
+
+    # Act
+    result = service.ask_npc(
+        target_character_id="npc_owner",
+        question="案发当晚你在哪里？",
+    )
+
+    # Assert: 返回结果正确
+    assert result.target_character_id == "npc_owner"
+    assert result.question == "案发当晚你在哪里？"
+    assert result.npc_answer == "我当时一直在前台。"
+
+    # Assert: responder 被调用
+    assert len(responder.calls) == 1
+
+    call = responder.calls[0]
+    assert call["state"] is state
+    assert call["target_character_id"] == "npc_owner"
+    assert call["player_question"] == "案发当晚你在哪里？"
+
+    # Assert: 问答历史被记录
+    assert len(state.qa_history) == 1
+
+    history = state.qa_history[0]
+    assert history.target_character_id == "npc_owner"
+    assert history.player_question == "案发当晚你在哪里？"
+    assert history.npc_answer == "我当时一直在前台。"

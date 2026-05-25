@@ -4,7 +4,7 @@ from typing import Protocol
 from pydantic import BaseModel
 
 from stery.application.npc_guardrail import NpcGuardrail
-from stery.domain.state import GameState
+from stery.domain.state import GameState, QAHistoryItem
 
 
 class NPCResponder(Protocol):
@@ -16,10 +16,10 @@ class NPCResponder(Protocol):
     """
 
     def answer(
-        self,
-        state: GameState,
-        target_character_id: str,
-        player_question: str,
+            self,
+            state: GameState,
+            target_character_id: str,
+            player_question: str,
     ) -> str:
         ...
 
@@ -28,6 +28,24 @@ class NPCInteractionResult(BaseModel):
     target_character_id: str
     question: str
     npc_answer: str
+
+
+def _build_guarded_question(
+        question: str,
+        guardrail_instruction: str,
+) -> str:
+    if not guardrail_instruction:
+        return question
+
+    return (
+        f"{question}\n\n"
+        f"{guardrail_instruction}\n\n"
+        "请严格遵守以上 NPC 回答边界。"
+    )
+
+
+def _touch_state(state: GameState) -> None:
+    state.touch()
 
 
 class NPCInteractionService:
@@ -49,10 +67,10 @@ class NPCInteractionService:
     """
 
     def __init__(
-        self,
-        state_provider: Callable[[], GameState | None],
-        responder: NPCResponder,
-        npc_guardrail: NpcGuardrail | None = None,
+            self,
+            state_provider: Callable[[], GameState | None],
+            responder: NPCResponder,
+            npc_guardrail: NpcGuardrail | None = None,
     ):
         """
         state_provider:
@@ -74,9 +92,9 @@ class NPCInteractionService:
         self.npc_guardrail = npc_guardrail or NpcGuardrail()
 
     def ask_npc(
-        self,
-        target_character_id: str,
-        question: str,
+            self,
+            target_character_id: str,
+            question: str,
     ) -> NPCInteractionResult:
         original_question = question.strip()
 
@@ -102,11 +120,11 @@ class NPCInteractionService:
 
         if not guardrail_result.should_call_llm:
             answer = (
-                guardrail_result.fallback_answer
-                or self.npc_guardrail.build_llm_error_fallback()
+                    guardrail_result.fallback_answer
+                    or self.npc_guardrail.build_llm_error_fallback()
             )
 
-            self._touch_state(state)
+            _touch_state(state)
 
             return NPCInteractionResult(
                 target_character_id=target_character_id,
@@ -114,7 +132,7 @@ class NPCInteractionService:
                 npc_answer=answer,
             )
 
-        guarded_question = self._build_guarded_question(
+        guarded_question = _build_guarded_question(
             question=original_question,
             guardrail_instruction=guardrail_result.prompt_instruction,
         )
@@ -130,11 +148,17 @@ class NPCInteractionService:
                 question=original_question,
                 answer=raw_answer,
             )
+            state.add_qa_history(
+                target_character_id=target_character_id,
+                player_question=original_question,
+                npc_answer=safe_answer,
+            )
 
-        except Exception:
+        except Exception as e:
+            print(f"ask error:{e}")
             safe_answer = self.npc_guardrail.build_llm_error_fallback()
 
-        self._touch_state(state)
+        _touch_state(state)
 
         return NPCInteractionResult(
             target_character_id=target_character_id,
@@ -149,20 +173,3 @@ class NPCInteractionService:
             raise RuntimeError("Game state is not initialized. Did you call runtime.start()?")
 
         return state
-
-    def _build_guarded_question(
-        self,
-        question: str,
-        guardrail_instruction: str,
-    ) -> str:
-        if not guardrail_instruction:
-            return question
-
-        return (
-            f"{question}\n\n"
-            f"{guardrail_instruction}\n\n"
-            "请严格遵守以上 NPC 回答边界。"
-        )
-
-    def _touch_state(self, state: GameState) -> None:
-        state.touch()
