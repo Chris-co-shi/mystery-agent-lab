@@ -1,12 +1,18 @@
 import json
+from pathlib import Path
 
 from stery.application import validate_script_references
 from stery.config import resolve_script_path
+from stery.config.paths import SCRIPTS_DIR
 from stery.domain.models import GameScript
-from stery.script_repository import ScriptSource
+from stery.script_repository import ScriptRepository
 
 
-class LocalFileScriptRepository(ScriptSource):
+class LocalFileScriptRepository(ScriptRepository):
+
+    def __init__(self, scripts_dir: Path = SCRIPTS_DIR):
+        self.scripts_dir = scripts_dir
+
     """
     本地存储的脚本源
     """
@@ -31,10 +37,7 @@ class LocalFileScriptRepository(ScriptSource):
 
     # 列出所有剧本
     def list_scripts(self) -> list[str]:
-        """
-        列出当前仓储中可用的剧本 ID。
-        """
-        return [
-            script_path.stem
-            for script_path in resolve_script_path("").glob("*.json")
-        ]
+        if not self.scripts_dir.exists():
+            return []
+
+        return sorted(path.stem for path in self.scripts_dir.glob("*.json"))

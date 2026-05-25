@@ -12,7 +12,8 @@ from stery.interfaces.cli import MysteryCliApp
 from stery.llm.base import LLMClient
 from stery.application.clue_search_service import ClueSearchService
 from stery.config.paths import ENV_FILE
-from stery.script_repository import LocalFileScriptRepository
+from stery.script_repository import LocalFileScriptRepository, ScriptRepository
+
 load_dotenv(ENV_FILE)
 
 
@@ -20,13 +21,29 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--script",
-        required=True,
+        required=False,
         help="剧本 ID，例如 mansion_murder，对应 scripts/mansion_murder.json",
+    )
+
+    parser.add_argument(
+        "--list-scripts",
+        action="store_true",
+        help="列出当前可用剧本",
     )
 
     args = parser.parse_args()
 
     repository = LocalFileScriptRepository()
+    if args.list_scripts:
+        print_available_scripts(repository)
+        return
+
+    if not args.script:
+        parser.print_help()
+        print()
+        print_available_scripts(repository)
+        return
+
     script = repository.get_script(args.script)
     clue_search_service = ClueSearchService(script)
     runtime = GameRuntime(script)
@@ -53,6 +70,17 @@ def main() -> None:
 
     app.run()
 
+
+def print_available_scripts(repository: ScriptRepository) -> None:
+    scripts = repository.list_scripts()
+
+    if not scripts:
+        print("当前没有可用剧本。")
+        return
+
+    print("可用剧本：")
+    for script_id in scripts:
+        print(f"- {script_id}")
 
 if __name__ == "__main__":
     main()

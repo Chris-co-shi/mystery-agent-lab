@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from stery.domain.models import GameScript
 
 
-class ScriptSource(ABC):
+class ScriptRepository(ABC):
     """
     游戏脚本源
     """
