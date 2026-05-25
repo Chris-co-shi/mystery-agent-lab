@@ -4,6 +4,7 @@ from typing import Any, Iterator, Optional, cast
 import openai
 from openai import OpenAI, Stream
 from openai.types.chat import ChatCompletion, ChatCompletionMessageParam, ChatCompletionChunk
+from stery.utils.text_sanitizer import sanitize_text
 
 from stery.llm.errors import LLMConfigError, LLMResponseError, LLMError, LLMAuthenticationError, LLMRateLimitError, \
     LLMTimeoutError, LLMProviderError
@@ -157,7 +158,7 @@ class LLMClient:
 
             request_params: dict[str, Any] = {
                 "model": self.model,
-                "messages": messages,
+                "messages": sanitize_text(messages),
                 "temperature": temperature if temperature is not None else self.temperature,
                 "stream": False,
                 **extra_params,
