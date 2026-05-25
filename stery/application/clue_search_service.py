@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel
 
 from stery.application.clue_manager import ClueManager
 from stery.domain.enums import ClueVisibility
@@ -7,12 +7,24 @@ from stery.domain.state import GameState
 
 
 class ClueSearchResult(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
+    # 玩家本次搜索关键词
     keyword: str
-    unlocked_clues: list[Clue] = Field(default_factory=list)
-    already_unlocked_clues: list[Clue] = Field(default_factory=list)
+    # 本次关键词命中的所有线索
+    matched_clues: list[Clue]
+    # 本次搜索新解锁的线索
+    newly_unlocked_clues: list[Clue]
+    # 之前已经解锁、本次又被命中的线索
+    already_unlocked_clues: list[Clue]
+    # 给 CLI 展示的摘要消息
     message: str
+
+    @property
+    def unlocked_clues(self) -> list[Clue]:
+        """
+        临时兼容旧代码。
+        后续 CLI 全部迁移到 newly_unlocked_clues 后可以删除。
+        """
+        return self.newly_unlocked_clues
 
 
 class ClueSearchService:
@@ -26,17 +38,19 @@ class ClueSearchService:
     - 不直接搜索 clue.content，避免泄露线索正文
     """
 
+
     def __init__(self, script: GameScript):
         self.script = script
         self.clue_manager = ClueManager(script)
 
+
     def search(self, state: GameState, keyword: str) -> ClueSearchResult:
         normalized_keyword = keyword.strip()
-
         if not normalized_keyword:
             raise ValueError("Search keyword cannot be empty.")
 
-        unlocked_clues: list[Clue] = []
+        matched_clues: list[Clue] = []
+        newly_unlocked_clues: list[Clue] = []
         already_unlocked_clues: list[Clue] = []
 
         for clue in self.script.clues:
@@ -46,28 +60,58 @@ class ClueSearchService:
             if not self._matches(clue, normalized_keyword):
                 continue
 
+            matched_clues.append(clue)
+
             if clue.id in state.unlocked_clue_ids:
                 already_unlocked_clues.append(clue)
                 continue
 
             self.clue_manager.unlock_clue(state, clue.id)
-            unlocked_clues.append(clue)
+            newly_unlocked_clues.append(clue)
 
-        if unlocked_clues:
-            message = f"你发现了 {len(unlocked_clues)} 条新线索。"
-        elif already_unlocked_clues:
-            message = "相关线索你已经发现过了。"
-        else:
-            message = "没有发现新的线索。"
-
-        state.touch()
+        message = self._build_message(
+            matched_count=len(matched_clues),
+            newly_unlocked_count=len(newly_unlocked_clues),
+            already_unlocked_count=len(already_unlocked_clues),
+        )
+        if matched_clues:
+            state.touch()
 
         return ClueSearchResult(
             keyword=normalized_keyword,
-            unlocked_clues=unlocked_clues,
+            matched_clues=matched_clues,
+            newly_unlocked_clues=newly_unlocked_clues,
             already_unlocked_clues=already_unlocked_clues,
             message=message,
         )
 
+
     def _matches(self, clue: Clue, keyword: str) -> bool:
-        return any(keyword in item for item in clue.search_keywords)
+        normalized_keyword = keyword.lower()
+
+        searchable_items = [
+            clue.id,
+            clue.title,
+            *clue.search_keywords,
+        ]
+
+        return any(
+            normalized_keyword in item.lower()
+            for item in searchable_items
+        )
+
+
+    def _build_message(
+            self,
+            matched_count: int,
+            newly_unlocked_count: int,
+            already_unlocked_count: int,
+    ) -> str:
+        if matched_count == 0:
+            return "没有发现相关线索。可以尝试搜索地点、物品、人物或时间。"
+
+        return (
+            f"本次搜索命中 {matched_count} 条线索，"
+            f"新发现 {newly_unlocked_count} 条，"
+            f"已发现过 {already_unlocked_count} 条。"
+        )

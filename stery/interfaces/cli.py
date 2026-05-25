@@ -119,12 +119,28 @@ class MysteryCliApp:
             print(f"搜索失败：{exc}")
             return
 
+        self.show_clue_search_result(result)
+
+    def show_clue_search_result(self, result) -> None:
+        print("\n【搜索结果】")
+        print(f"关键词：{result.keyword}")
         print(result.message)
 
-        for clue in result.unlocked_clues:
-            print(f"\n【新线索】{clue.title}")
-            print(clue.content)
+        if not result.matched_clues:
+            return
 
+        if result.newly_unlocked_clues:
+            print("\n【新发现线索】")
+            for clue in result.newly_unlocked_clues:
+                print(f"- {clue.title}")
+                print(f"  ID：{clue.id}")
+                print(f"  内容：{clue.content}")
+
+        if result.already_unlocked_clues:
+            print("\n【已发现过的线索】")
+            for clue in result.already_unlocked_clues:
+                print(f"- {clue.title}")
+                print(f"  ID：{clue.id}")
     def ask_npc(self) -> None:
         print("\n【询问 NPC】")
         self.show_characters()
