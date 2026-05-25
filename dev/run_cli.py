@@ -1,5 +1,8 @@
-from dotenv import load_dotenv
+from bootstrap import bootstrap_project
 
+bootstrap_project()
+from dotenv import load_dotenv
+import argparse
 from stery.agents import NPCAgent
 from stery.application.game_runtime import GameRuntime
 from stery.application.npc_interaction_service import NPCInteractionService
@@ -8,12 +11,22 @@ from stery.application.script_loader import load_script
 from stery.interfaces.cli import MysteryCliApp
 from stery.llm.base import LLMClient
 from stery.application.clue_search_service import ClueSearchService
+from stery.config.paths import ENV_FILE
 
-load_dotenv()
+load_dotenv(ENV_FILE)
 
 
 def main() -> None:
-    script = load_script("scripts/mansion_murder.json")
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--script",
+        required=True,
+        help="剧本 ID，例如 mansion_murder，对应 scripts/mansion_murder.json",
+    )
+
+    args = parser.parse_args()
+
+    script = load_script(args.script)
     clue_search_service = ClueSearchService(script)
     runtime = GameRuntime(script)
 

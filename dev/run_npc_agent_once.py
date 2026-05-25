@@ -1,3 +1,6 @@
+from bootstrap import bootstrap_project
+
+bootstrap_project()
 from dotenv import load_dotenv
 
 from stery.agents.npc_agent import NPCAgent
@@ -6,11 +9,13 @@ from stery.application.npc_interaction_service import NPCInteractionService
 from stery.application.script_loader import load_script
 from stery.llm.base import LLMClient
 
-load_dotenv()
+from stery.config.paths import ENV_FILE, MANSION_MURDER_SCRIPT
+
+load_dotenv(ENV_FILE)
 
 
 def main():
-    script = load_script("../scripts/mansion_murder.json")
+    script = load_script(MANSION_MURDER_SCRIPT)
 
     runtime = GameRuntime(script)
     runtime.start()
