@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 
-from stery.agents.npc_agent import NPCAgent
-from stery.application import clue_search_service
+from stery.agents import NPCAgent
 from stery.application.game_runtime import GameRuntime
 from stery.application.npc_interaction_service import NPCInteractionService
 from stery.application.rule_judge import RuleJudge
@@ -14,7 +13,7 @@ load_dotenv()
 
 
 def main() -> None:
-    script = load_script("../scripts/mansion_murder.json")
+    script = load_script("scripts/mansion_murder.json")
     clue_search_service = ClueSearchService(script)
     runtime = GameRuntime(script)
 
