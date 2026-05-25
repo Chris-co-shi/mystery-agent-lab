@@ -121,7 +121,13 @@
       "related_character_ids": [
         "npc_doctor"
       ],
-      "is_key_clue": true
+      "is_key_clue": true,
+      "search_keywords": [
+        "书房",
+        "酒杯",
+        "地毯",
+        "红酒"
+      ]
     },
     {
       "id": "clue_medicine_bottle",
@@ -132,7 +138,13 @@
       "related_character_ids": [
         "npc_doctor"
       ],
-      "is_key_clue": true
+      "is_key_clue": true,
+      "search_keywords": [
+        "书房",
+        "抽屉",
+        "药瓶",
+        "透明液体"
+      ]
     },
     {
       "id": "clue_torn_letter",
@@ -143,7 +155,13 @@
       "related_character_ids": [
         "npc_doctor"
       ],
-      "is_key_clue": true
+      "is_key_clue": true,
+      "search_keywords": [
+        "垃圾桶",
+        "勒索信",
+        "纸片",
+        "医疗事故"
+      ]
     },
     {
       "id": "clue_spare_key",
@@ -154,7 +172,13 @@
       "related_character_ids": [
         "npc_butler"
       ],
-      "is_key_clue": false
+      "is_key_clue": false,
+      "search_keywords": [
+        "管家室",
+        "备用钥匙",
+        "木盒",
+        "钥匙"
+      ]
     },
     {
       "id": "clue_will_draft",
@@ -165,7 +189,14 @@
       "related_character_ids": [
         "npc_daughter"
       ],
-      "is_key_clue": false
+      "is_key_clue": false,
+      "search_keywords": [
+        "书房",
+        "文件柜",
+        "遗嘱",
+        "股份",
+        "草稿"
+      ]
     }
   ],
   "truth": {

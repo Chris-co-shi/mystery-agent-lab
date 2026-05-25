@@ -96,6 +96,8 @@ class Clue(ScriptBaseModel):
     related_character_ids: list[str] = Field(default_factory=list)
     # 是否是关键线索
     is_key_clue: bool = False
+    # 关键线索关键词
+    search_keywords: list[str] = Field(default_factory=list)
 
 
 class Truth(ScriptBaseModel):

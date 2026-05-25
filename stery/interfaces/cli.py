@@ -1,3 +1,4 @@
+from stery.application import ClueSearchService
 from stery.application.game_runtime import GameRuntime
 from stery.application.npc_interaction_service import NPCInteractionService
 from stery.application.rule_judge import RuleJudge
@@ -21,14 +22,16 @@ class MysteryCliApp:
     """
 
     def __init__(
-        self,
-        runtime: GameRuntime,
-        npc_interaction_service: NPCInteractionService,
-        rule_judge: RuleJudge,
+            self,
+            runtime: GameRuntime,
+            npc_interaction_service: NPCInteractionService,
+            rule_judge: RuleJudge,
+            clue_search_service: ClueSearchService,
     ):
         self.runtime = runtime
         self.npc_interaction_service = npc_interaction_service
         self.rule_judge = rule_judge
+        self.clue_search_service = clue_search_service
 
     def run(self) -> None:
         self.runtime.start()
@@ -50,8 +53,10 @@ class MysteryCliApp:
             elif choice == "3":
                 self.show_available_clues()
             elif choice == "4":
-                self.ask_npc()
+                self.search_clue()
             elif choice == "5":
+                self.ask_npc()
+            elif choice == "6":
                 self.submit_final_vote()
             elif choice == "0":
                 print("游戏结束。")
@@ -64,10 +69,13 @@ class MysteryCliApp:
         print("1. 查看案件背景")
         print("2. 查看人物列表")
         print("3. 查看当前线索")
-        print("4. 询问 NPC")
-        print("5. 提交最终推理")
+        print("4. 搜索线索")
+        print("5. 询问 NPC")
+        print("6. 提交最终推理")
         print("0. 退出游戏")
         print("==============================")
+
+
 
     def show_background(self) -> None:
         print("\n【案件背景】")
@@ -96,6 +104,34 @@ class MysteryCliApp:
             print(f"{index}. {clue.title}")
             print(f"   ID：{clue.id}")
             print(f"   内容：{clue.content}")
+
+    def search_clue(self) -> None:
+        print("\n【搜索线索】")
+        keyword = input("请输入你要搜索的地点、物品或关键词：").strip()
+
+        if not keyword:
+            print("搜索关键词不能为空。")
+            return
+
+        try:
+            state = self.runtime.state
+            if state is None:
+                print("游戏尚未开始。")
+                return
+
+            result = self.clue_search_service.search(
+                state=state,
+                keyword=keyword,
+            )
+        except Exception as exc:
+            print(f"搜索失败：{exc}")
+            return
+
+        print(result.message)
+
+        for clue in result.unlocked_clues:
+            print(f"\n【新线索】{clue.title}")
+            print(clue.content)
 
     def ask_npc(self) -> None:
         print("\n【询问 NPC】")
