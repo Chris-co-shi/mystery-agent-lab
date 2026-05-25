@@ -4,7 +4,6 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 SCRIPTS_DIR = PROJECT_ROOT / "scripts"
-MANSION_MURDER_SCRIPT = SCRIPTS_DIR / "mansion_murder.json"
 
 ENV_FILE = PROJECT_ROOT / ".env"
 
@@ -23,3 +22,14 @@ def resolve_project_path(path: str | Path) -> Path:
         return target
 
     return PROJECT_ROOT / target
+
+
+def resolve_script_path(script_id: str) -> Path:
+    """
+    根据 script_id 解析剧本文件路径。
+
+    示例：
+    - script_id = "mansion_murder"
+    - 返回 scripts/mansion_murder.json
+    """
+    return SCRIPTS_DIR / f"{script_id}.json"

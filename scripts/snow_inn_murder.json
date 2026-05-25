@@ -1,0 +1,386 @@
+{
+  "id": "snow_inn_murder_001",
+  "title": "雪夜温泉旅馆毒杀案",
+  "version": "0.1.1",
+  "background": "大雪封山的夜晚，悬疑小说作家沈砚在青岚温泉旅馆的茶室中死亡。旅馆通往山下的道路被积雪阻断，外部救援至少要第二天清晨才能抵达。案发当晚，死者正在与几名住客讨论他即将出版的新书。玩家需要在有限提问轮次内，通过询问 NPC 和搜索线索，判断真正的凶手、作案动机、作案手法以及关键证据。",
+  "rules": {
+    "max_question_rounds": 8,
+    "allow_free_question": true,
+    "allow_clue_search": true,
+    "final_vote": [
+      "suspect_character_id",
+      "motive",
+      "method",
+      "key_evidence"
+    ]
+  },
+  "characters": [
+    {
+      "id": "npc_owner",
+      "name": "白川",
+      "role": "旅馆老板",
+      "is_npc": true,
+      "public_profile": "青岚温泉旅馆的老板，性格沉稳，对旅馆声誉极为看重。案发当晚负责接待所有住客。"
+    },
+    {
+      "id": "npc_assistant",
+      "name": "许知遥",
+      "role": "死者助理",
+      "is_npc": true,
+      "public_profile": "沈砚的年轻助理，负责整理手稿和行程。她跟随沈砚多年，但近期似乎准备离职。"
+    },
+    {
+      "id": "npc_photographer",
+      "name": "陆青",
+      "role": "旅行摄影师",
+      "is_npc": true,
+      "public_profile": "住在旅馆的摄影师，声称只是来拍摄雪景。案发前后，他多次出现在茶室附近。"
+    },
+    {
+      "id": "npc_pharmacist",
+      "name": "程曼",
+      "role": "药剂师",
+      "is_npc": true,
+      "public_profile": "附近诊所的药剂师，因为暴雪滞留在旅馆。她熟悉常见药物，也认识死者沈砚。"
+    }
+  ],
+  "npc_profiles": [
+    {
+      "id": "npc_owner",
+      "private_background": "白川经营旅馆多年，最近因资金问题濒临破产。沈砚的新书中疑似影射旅馆过去发生的一起坠崖事故，这可能导致旅馆彻底倒闭。",
+      "known_facts": [
+        "案发当晚 20:10，白川给所有住客送过晚茶。",
+        "他知道沈砚曾向他询问过十年前的坠崖事故。",
+        "21:05 左右，他听到茶室方向传来杯子摔碎的声音。"
+      ],
+      "secrets": [
+        "白川曾请求沈砚不要把旅馆旧事写进新书。",
+        "他案发前进入过茶室整理炭炉。",
+        "他保管着茶室和储藏室的备用钥匙。"
+      ],
+      "lie_rules": [
+        "如果被问到是否和沈砚发生争执，可以说只是普通沟通。",
+        "如果被问到备用钥匙，可以承认钥匙在自己这里，但强调老板保管钥匙很正常。",
+        "如果被问到旅馆旧事，先回避，除非玩家提到坠崖事故。"
+      ],
+      "forbidden_knowledge": [
+        "不知道程曼将药物加入茶中。",
+        "不知道沈砚真正的死亡机制。",
+        "不知道陆青相机里拍到了什么。"
+      ],
+      "personality": "克制、圆滑、重视旅馆名誉，回答时会尽量把话题引向经营压力而不是杀人动机。"
+    },
+    {
+      "id": "npc_assistant",
+      "private_background": "许知遥长期替沈砚处理手稿，却一直得不到署名。她知道沈砚的新书大量使用了她提供的调查材料，因此对沈砚心怀不满。",
+      "known_facts": [
+        "案发当晚 19:50，许知遥曾把一份修改后的手稿交给沈砚。",
+        "她知道沈砚准备第二天清晨离开旅馆。",
+        "她在 20:40 左右看到程曼端着茶盘进入茶室。"
+      ],
+      "secrets": [
+        "许知遥偷偷撕下过一页手稿，因为那一页暴露了她提供资料的事实。",
+        "她曾威胁沈砚，如果不署名就公开聊天记录。",
+        "她案发后短暂进入过沈砚房间寻找自己的资料。"
+      ],
+      "lie_rules": [
+        "如果被问到手稿，可以说只是正常工作修改。",
+        "如果被问到是否怨恨沈砚，可以说自己只是失望，不至于杀人。",
+        "如果被问到案发后去哪里，可以先说自己一直在房间。"
+      ],
+      "forbidden_knowledge": [
+        "不知道茶里被加入了药物。",
+        "不知道程曼和沈砚之间的旧案关系。",
+        "不知道陆青拍摄到程曼进出茶室。"
+      ],
+      "personality": "敏感、防御心强，表面冷静，但被追问署名和手稿时容易激动。"
+    },
+    {
+      "id": "npc_photographer",
+      "private_background": "陆青表面是旅行摄影师，实际上受杂志委托调查沈砚新书背后的真实案件。他一直在暗中拍摄旅馆内人员动向。",
+      "known_facts": [
+        "案发当晚 20:35 到 20:50 之间，陆青在走廊拍摄雪景和室内光影。",
+        "他的相机拍到了程曼端着茶盘进入茶室的画面。",
+        "21:00 左右，他听到沈砚在茶室剧烈咳嗽。"
+      ],
+      "secrets": [
+        "陆青并不是普通游客，他在调查沈砚的新书素材。",
+        "他曾收钱替某杂志跟踪沈砚。",
+        "他案发后删除过几张容易暴露自己偷拍行为的照片。"
+      ],
+      "lie_rules": [
+        "如果被问到为什么在茶室附近，可以说是在拍雪景。",
+        "如果被问到相机内容，可以先说都是普通风景照。",
+        "如果玩家已经找到存储卡线索，可以承认拍到了程曼进入茶室。"
+      ],
+      "forbidden_knowledge": [
+        "不知道程曼具体加入了什么药。",
+        "不知道白川和许知遥的完整秘密。",
+        "不知道沈砚被谁最终毒杀，除非玩家已经展示关键线索。"
+      ],
+      "personality": "观察力强、话术灵活，习惯避重就轻，不愿承认偷拍。"
+    },
+    {
+      "id": "npc_pharmacist",
+      "private_background": "程曼曾卷入一起违规售药事件，沈砚掌握了她私自提供处方药的证据，并准备把这件事写进新书。她担心职业生涯被毁，于是在案发当晚利用药剂知识实施毒杀。",
+      "known_facts": [
+        "案发当晚 20:40，程曼以关心沈砚胃痛为由进入茶室。",
+        "她将混有强效镇静成分的药粉加入沈砚的热茶中。",
+        "沈砚在 21:00 后出现呼吸困难和意识模糊。",
+        "她离开茶室后故意绕到走廊另一侧，制造自己不在场的假象。"
+      ],
+      "secrets": [
+        "程曼是真凶。",
+        "她曾被沈砚掌握违规售药证据。",
+        "她案发当晚随身携带了用纸包分装的镇静药粉。",
+        "她把残留药粉藏进了公共药箱夹层。"
+      ],
+      "lie_rules": [
+        "如果被问到是否进入茶室，承认进入，但声称只是给沈砚送胃药。",
+        "如果被问到药粉，可以说是普通胃药粉末。",
+        "如果被问到沈砚是否威胁过她，先否认，再说只是普通采访。",
+        "如果玩家已经掌握茶杯残留物、药粉和相机存储卡，可以出现明显紧张，但不能主动承认杀人。"
+      ],
+      "forbidden_knowledge": [
+        "不能主动承认自己是真凶。",
+        "不能主动说明药粉被加入茶中，除非玩家已经掌握关键线索并连续追问。",
+        "不能知道许知遥撕毁手稿的完整原因。",
+        "不能知道白川资金链断裂的具体金额。"
+      ],
+      "personality": "理性、谨慎、专业感强，喜欢用药理常识解释异常现象，但在证据链完整时会出现短暂停顿和回避。"
+    }
+  ],
+  "clues": [
+    {
+      "id": "clue_cold_tea_cup",
+      "title": "茶室桌上的冷茶杯",
+      "content": "茶杯底部残留少量深色茶液，杯沿有明显擦拭痕迹。茶水闻起来带有轻微苦味，不像普通红茶。",
+      "visibility": "PUBLIC",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_pharmacist"
+      ],
+      "is_key_clue": true,
+      "search_keywords": [
+        "茶室",
+        "茶杯",
+        "冷茶",
+        "红茶",
+        "杯子"
+      ]
+    },
+    {
+      "id": "clue_snow_footprints",
+      "title": "茶室外走廊的雪水脚印",
+      "content": "茶室外的木质走廊上有几处未干的雪水脚印，脚印方向从侧门延伸到储藏室附近，但痕迹被人擦过。",
+      "visibility": "PUBLIC",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_owner",
+        "npc_photographer"
+      ],
+      "is_key_clue": false,
+      "search_keywords": [
+        "走廊",
+        "脚印",
+        "雪水",
+        "侧门",
+        "储藏室"
+      ]
+    },
+    {
+      "id": "clue_sedative_powder",
+      "title": "公共药箱夹层里的药粉纸包",
+      "content": "公共药箱夹层中藏着一个折叠纸包，里面残留白色药粉。纸包外侧有药房常用的分装编号痕迹。",
+      "visibility": "LOCKED",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_pharmacist"
+      ],
+      "is_key_clue": true,
+      "search_keywords": [
+        "药箱",
+        "夹层",
+        "药粉",
+        "纸包",
+        "白色粉末"
+      ]
+    },
+    {
+      "id": "clue_prescription_note",
+      "title": "沈砚笔记本里的处方记录",
+      "content": "沈砚的笔记本中夹着一张手写记录，上面写着“程曼、处方药、违规分装、采访确认”等字样。",
+      "visibility": "LOCKED",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_pharmacist"
+      ],
+      "is_key_clue": true,
+      "search_keywords": [
+        "笔记本",
+        "处方",
+        "违规",
+        "分装",
+        "采访"
+      ]
+    },
+    {
+      "id": "clue_camera_memory_card",
+      "title": "被删除照片的相机存储卡",
+      "content": "陆青相机的存储卡中有几张被删除但可恢复的照片，其中一张显示 20:40 左右程曼端着茶盘进入茶室。",
+      "visibility": "LOCKED",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_photographer",
+        "npc_pharmacist"
+      ],
+      "is_key_clue": true,
+      "search_keywords": [
+        "相机",
+        "存储卡",
+        "照片",
+        "删除",
+        "茶盘"
+      ]
+    },
+    {
+      "id": "clue_torn_manuscript",
+      "title": "被撕下的一页手稿",
+      "content": "垃圾桶中有一页被揉皱的手稿，内容提到“真正提供调查资料的人不该被抹去”。纸张边缘与沈砚房间中的手稿缺口吻合。",
+      "visibility": "LOCKED",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_assistant"
+      ],
+      "is_key_clue": false,
+      "search_keywords": [
+        "垃圾桶",
+        "手稿",
+        "撕下",
+        "署名",
+        "资料"
+      ]
+    },
+    {
+      "id": "clue_storage_key_log",
+      "title": "储藏室备用钥匙登记本",
+      "content": "登记本显示，白川在案发前一小时取走过茶室和储藏室备用钥匙，但归还时间被涂改过。",
+      "visibility": "LOCKED",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_owner"
+      ],
+      "is_key_clue": false,
+      "search_keywords": [
+        "储藏室",
+        "备用钥匙",
+        "登记本",
+        "钥匙",
+        "涂改"
+      ]
+    },
+    {
+      "id": "clue_wet_coat",
+      "title": "壁炉旁半干的外套",
+      "content": "壁炉旁挂着一件半干的外套，袖口有雪水和松针。外套尺寸不像白川的，更像陆青穿过的摄影外套。",
+      "visibility": "LOCKED",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_photographer"
+      ],
+      "is_key_clue": false,
+      "search_keywords": [
+        "壁炉",
+        "外套",
+        "雪水",
+        "松针",
+        "摄影"
+      ]
+    },
+    {
+      "id": "clue_hidden_toxicology_report",
+      "title": "内部毒理复盘记录",
+      "content": "内部复盘记录显示，沈砚体内检测到高浓度镇静药物，与公共药箱夹层中残留药粉成分一致。",
+      "visibility": "HIDDEN",
+      "unlock_phase": "REVEAL_TRUTH",
+      "related_character_ids": [
+        "npc_pharmacist"
+      ],
+      "is_key_clue": false,
+      "search_keywords": [
+        "毒理",
+        "复盘",
+        "检测",
+        "镇静药物"
+      ]
+    }
+  ],
+  "truth": {
+    "id": "npc_pharmacist",
+    "motive": "程曼曾违规分装并私下提供处方药，沈砚掌握了相关证据，并准备将此事写入新书。她担心职业资格被吊销、名誉彻底毁掉，于是在暴雪封山的夜晚决定杀死沈砚。",
+    "method": "程曼利用自己药剂师的身份，以关心沈砚胃痛为由进入茶室，将强效镇静药粉混入沈砚的热茶中。沈砚饮茶后逐渐出现呼吸抑制和意识模糊，最终死亡。程曼随后擦拭茶杯杯沿、藏起剩余药粉，并借助白川的钥匙记录、许知遥的手稿矛盾和陆青的偷拍行为制造多个误导方向。",
+    "key_clue_ids": [
+      "clue_cold_tea_cup",
+      "clue_sedative_powder",
+      "clue_prescription_note",
+      "clue_camera_memory_card"
+    ],
+    "summary": "真正的凶手是程曼。白川有旅馆旧事和备用钥匙问题，许知遥有手稿署名矛盾，陆青有偷拍和删除照片行为，但这些都不是杀人行为。关键证据链是：茶杯残留苦味说明饮品异常，药箱夹层药粉说明存在可疑药物，沈砚笔记本证明程曼存在被揭发的动机，相机存储卡证明她在关键时间端着茶盘进入茶室。"
+  },
+  "timeline": [
+    {
+      "time": "19:50",
+      "id": "npc_assistant",
+      "event": "许知遥将修改后的手稿交给沈砚，两人因署名问题发生争执。",
+      "is_public": true
+    },
+    {
+      "time": "20:10",
+      "id": "npc_owner",
+      "event": "白川为住客准备晚茶，并进入茶室整理炭炉。",
+      "is_public": true
+    },
+    {
+      "time": "20:30",
+      "id": "npc_photographer",
+      "event": "陆青在走廊和茶室附近拍摄雪景，实际也在暗中记录人员动向。",
+      "is_public": false
+    },
+    {
+      "time": "20:40",
+      "id": "npc_pharmacist",
+      "event": "程曼端着茶盘进入茶室，以送胃药为由接近沈砚。",
+      "is_public": false
+    },
+    {
+      "time": "20:43",
+      "id": "npc_pharmacist",
+      "event": "程曼将强效镇静药粉混入沈砚的热茶中。",
+      "is_public": false
+    },
+    {
+      "time": "20:50",
+      "id": "npc_photographer",
+      "event": "陆青的相机拍到程曼离开茶室，但他之后删除了部分照片。",
+      "is_public": false
+    },
+    {
+      "time": "21:00",
+      "id": "npc_photographer",
+      "event": "陆青听到茶室内传来剧烈咳嗽声。",
+      "is_public": false
+    },
+    {
+      "time": "21:05",
+      "id": "npc_owner",
+      "event": "白川听到茶室方向传来杯子摔碎的声音。",
+      "is_public": false
+    },
+    {
+      "time": "21:15",
+      "id": "npc_assistant",
+      "event": "许知遥进入茶室，发现沈砚倒在桌边，茶杯已经摔在地上。",
+      "is_public": true
+    }
+  ]
+}

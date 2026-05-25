@@ -1,77 +1,74 @@
 # Mystery Agent Lab
 
-`mystery-agent-lab` 是一个 AI 在线剧本杀实验项目。
+一个用于学习和实验 **AI 剧本杀 / 推理游戏 Agent** 的轻量级项目。
 
-当前目标不是直接做完整商业产品，而是通过一个可运行的剧本杀场景，逐步学习和验证 AI Agent 的核心能力：
+本项目目标不是一开始就做复杂的 Web 平台、多玩家房间或商业化系统，而是先从一个可运行、可测试、可迭代的 CLI 剧本杀闭环开始，逐步演进出 AI NPC、线索系统、推理判定、会话记录、剧本管理等核心能力。
 
-- 剧本数据建模
-- 游戏状态管理
-- 线索搜证与解锁
-- NPC 角色上下文隔离
+---
+
+## 1. 项目定位
+
+Mystery Agent Lab 是一个面向学习和工程实践的 AI 剧本杀实验项目。
+
+当前重点：
+
+- 剧本结构建模
+- 剧本 JSON 加载与校验
+- CLI 单人游玩闭环
+- 玩家搜索线索
+- 玩家询问 NPC
 - LLM 驱动 NPC 回答
-- 玩家问答记录
-- 最终推理评分
-- CLI 最小可玩闭环
+- 最终推理提交
+- 规则判定与真相复盘
+- 多剧本加载能力
+
+后续逐步演进：
+
+- NPC 回答安全边界
+- 会话记录与复盘报告
+- 更稳定的 CLI 交互体验
+- 多剧本目录管理
+- Web API
+- Web UI
+- 多玩家协作推理
+- Agent 化推理与主持人系统
 
 ---
 
-## 当前版本能力
+## 2. 当前版本状态
 
-当前版本已经支持单人 CLI 剧本杀最小闭环：
+### v0.1.0 - CLI Playable
 
-1. 加载固定剧本 `mansion_murder.json`
-2. 启动一局游戏
-3. 查看案件背景
-4. 查看人物列表
-5. 查看当前可见线索
-6. 搜索线索并解锁新线索
-7. 询问 NPC
-8. 调用 LLM 生成 NPC 回答
-9. 记录玩家提问与 NPC 回答
-10. 提交最终推理
-11. 使用 RuleJudge 评分
-12. 查看真相复盘
+v0.1.0 已完成最小可玩闭环。
+
+已具备能力：
+
+- 加载剧本 JSON
+- 校验剧本结构
+- 展示案件背景
+- 展示角色信息
+- 搜索并解锁线索
+- 向 NPC 提问
+- 使用 LLM 生成 NPC 回答
+- 提交最终推理
+- RuleJudge 规则评分
+- 查看真相复盘
+- CLI 单人流程可跑通
 
 ---
 
-## 项目结构
+### v0.1.1 - CLI 可玩性与剧本管理增强版
+
+v0.1.1 的目标是让项目从“能跑一个固定剧本”升级为：
+
+> 能稳定选择多个剧本，能清晰提示错误，能更顺畅完成一局游戏，并为后续 Web/API 扩展打基础。
+
+当前进度：
 
 ```text
-mystery-agent-lab/
-  scripts/
-    mansion_murder.json
-
-  stery/
-    agents/
-      npc_agent.py
-
-    application/
-      clue_manager.py
-      clue_search_service.py
-      game_runtime.py
-      npc_context_builder.py
-      npc_interaction_service.py
-      npc_prompt_renderer.py
-      rule_judge.py
-      script_loader.py
-      script_validator.py
-
-    domain/
-      enums.py
-      models.py
-      state.py
-
-    interfaces/
-      cli.py
-
-    llm/
-      base.py
-      errors.py
-
-  tests/
-    unit/
-    e2e/
-
-  dev/
-    run_cli.py
-    run_npc_agent_once.py
+✅ TASK-001：剧本加载泛化
+⬜ TASK-002：可用剧本列表 + 友好错误提示
+⬜ TASK-003：CLI 命令提示增强
+⬜ TASK-004：线索搜索反馈优化
+⬜ TASK-005：NPC 回答安全边界
+⬜ TASK-006：会话记录 SessionRecorder

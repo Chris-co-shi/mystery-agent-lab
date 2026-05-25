@@ -9,7 +9,9 @@ from stery.domain.state import GameState
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-SCRIPT_PATH = PROJECT_ROOT / "scripts" / "mansion_murder.json"
+from stery.config.paths import MANSION_MURDER_SCRIPT
+
+SCRIPT_PATH = MANSION_MURDER_SCRIPT
 
 
 class FakeNPCAgent:

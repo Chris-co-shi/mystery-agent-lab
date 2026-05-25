@@ -7,7 +7,9 @@ from stery.application.script_loader import load_script
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-SCRIPT_PATH = PROJECT_ROOT / "scripts" / "mansion_murder.json"
+from stery.config.paths import MANSION_MURDER_SCRIPT
+
+SCRIPT_PATH = MANSION_MURDER_SCRIPT
 
 
 def test_get_initial_unlocked_clue_ids_only_contains_public_clues():
