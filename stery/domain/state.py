@@ -29,12 +29,21 @@ class FinalVote(RuntimeBaseModel):
     submitted_at: datetime = Field(default_factory=utc_now)
 
 
+class NPCAnswerRecord(RuntimeBaseModel):
+    answer_id: str = Field(default_factory=lambda: uuid4().hex)
+    question_id: str
+    target_character_id: str
+    content: str
+    created_at: datetime = Field(default_factory=utc_now)
+
+
 class GameState(RuntimeBaseModel):
     script_id: str
     current_phase: GamePhase = GamePhase.START
     current_round: int = 0
     unlocked_clue_ids: set[str] = Field(default_factory=set)
     question_history: list[QuestionRecord] = Field(default_factory=list)
+    answer_history: list[NPCAnswerRecord] = Field(default_factory=list)
     final_vote: FinalVote | None = None
     is_finished: bool = False
     created_at: datetime = Field(default_factory=utc_now)
@@ -42,3 +51,4 @@ class GameState(RuntimeBaseModel):
 
     def touch(self) -> None:
         self.updated_at = utc_now()
+

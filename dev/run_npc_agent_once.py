@@ -14,17 +14,33 @@ def main():
     runtime = GameRuntime(script)
     state = runtime.start()
 
-    llm_client = LLMClient(temperature=0.2)
+    llm_client = LLMClient()
     agent = NPCAgent(script=script, llm_client=llm_client)
+
+    player_question = "案发当晚 22 点左右，你在哪里？"
+
+    runtime.record_question(
+        target_character_id="npc_butler",
+        question=player_question,
+    )
 
     answer = agent.answer(
         state=state,
         target_character_id="npc_butler",
-        player_question="案发当晚 22 点左右，你在哪里？",
+        player_question=player_question,
+    )
+
+    runtime.record_npc_answer(
+        target_character_id="npc_butler",
+        answer=answer,
     )
 
     print("NPC 回答：")
     print(answer)
+
+    print("\n当前问答历史：")
+    print(state.question_history)
+    print(state.answer_history)
 
 
 if __name__ == "__main__":

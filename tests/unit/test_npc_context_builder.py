@@ -204,3 +204,26 @@ def test_build_npc_context_unknown_character_failed():
             target_character_id="npc_not_exists",
             player_question="你是谁？",
         )
+
+
+def test_build_npc_context_contains_recent_question_and_answer_history():
+    _, runtime, state, builder = build_runtime_and_builder()
+
+    runtime.record_question(
+        target_character_id="npc_butler",
+        question="案发当晚你在哪里？",
+    )
+
+    runtime.record_npc_answer(
+        target_character_id="npc_butler",
+        answer="我当时只是在走廊巡查。",
+    )
+
+    context = builder.build(
+        state=state,
+        target_character_id="npc_butler",
+        player_question="你刚才说的是真的吗？",
+    )
+
+    assert any("案发当晚你在哪里" in item for item in context.recent_question_history)
+    assert any("我当时只是在走廊巡查" in item for item in context.recent_question_history)

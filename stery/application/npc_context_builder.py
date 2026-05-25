@@ -99,17 +99,24 @@ class NPCContextBuilder:
 
     def _build_recent_question_history(self, state: GameState) -> list[str]:
         """
-        第一版只返回最近 5 条问题文本。
+        第一版返回最近 5 条问题及其对应 NPC 回答。
 
-        后面可以改成：
-        - 按 NPC 过滤
-        - 加入回答摘要
-        - 加入轮次信息
-        - 做上下文压缩
+        字段名仍然叫 recent_question_history，是为了减少现阶段改动；
+        实际内容已经是最近问答历史。
         """
         recent_questions = state.question_history[-5:]
+        answers_by_question_id = {
+            answer.question_id: answer
+            for answer in state.answer_history
+        }
 
-        return [
-            f"{question.target_character_id}: {question.content}"
-            for question in recent_questions
-        ]
+        history: list[str] = []
+
+        for question in recent_questions:
+            history.append(f"玩家 -> {question.target_character_id}: {question.content}")
+
+            answer = answers_by_question_id.get(question.question_id)
+            if answer is not None:
+                history.append(f"{answer.target_character_id} -> 玩家: {answer.content}")
+
+        return history

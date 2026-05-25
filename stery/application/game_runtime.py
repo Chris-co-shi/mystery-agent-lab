@@ -1,7 +1,7 @@
 from stery.application.clue_manager import ClueManager
 from stery.domain.enums import GamePhase
 from stery.domain.models import Character, GameScript
-from stery.domain.state import FinalVote, GameState, QuestionRecord
+from stery.domain.state import FinalVote, GameState, QuestionRecord, NPCAnswerRecord
 
 
 class GameRuntime:
@@ -51,9 +51,9 @@ class GameRuntime:
         return self.clue_manager.unlock_clue(state, clue_id)
 
     def record_question(
-        self,
-        target_character_id: str,
-        question: str,
+            self,
+            target_character_id: str,
+            question: str,
     ) -> GameState:
         state = self._require_started()
 
@@ -72,12 +72,49 @@ class GameRuntime:
 
         return state
 
+    def record_npc_answer(
+            self,
+            target_character_id: str,
+            answer: str,
+            question_id: str | None = None,
+    ) -> GameState:
+        """
+        记录 NPC 回答。
+
+        如果 question_id 为空，则默认绑定到该 NPC 最近一次被问的问题。
+        """
+        state = self._require_started()
+
+        self._ensure_character_exists(target_character_id)
+
+        actual_question_id = question_id or self._find_latest_question_id(
+            state=state,
+            target_character_id=target_character_id,
+        )
+
+        self._ensure_question_exists(
+            state=state,
+            question_id=actual_question_id,
+            target_character_id=target_character_id,
+        )
+
+        state.answer_history.append(
+            NPCAnswerRecord(
+                question_id=actual_question_id,
+                target_character_id=target_character_id,
+                content=answer,
+            )
+        )
+        state.touch()
+
+        return state
+
     def submit_final_vote(
-        self,
-        suspect_character_id: str,
-        motive: str,
-        method: str,
-        key_evidence: list[str],
+            self,
+            suspect_character_id: str,
+            motive: str,
+            method: str,
+            key_evidence: list[str],
     ) -> GameState:
         state = self._require_started()
 
@@ -128,3 +165,33 @@ class GameRuntime:
                 f"Question round limit exceeded: "
                 f"{state.current_round}/{self.script.rules.max_question_rounds}"
             )
+
+    def _find_latest_question_id(
+            self,
+            state: GameState,
+            target_character_id: str,
+    ) -> str:
+        for question in reversed(state.question_history):
+            if question.target_character_id == target_character_id:
+                return question.question_id
+
+        raise ValueError(f"No question found for character_id: {target_character_id}")
+
+    def _ensure_question_exists(
+            self,
+            state: GameState,
+            question_id: str,
+            target_character_id: str,
+    ) -> None:
+        for question in state.question_history:
+            if question.question_id == question_id:
+                if question.target_character_id != target_character_id:
+                    raise ValueError(
+                        f"Question target mismatch: "
+                        f"question_id={question_id}, "
+                        f"expected={target_character_id}, "
+                        f"actual={question.target_character_id}"
+                    )
+                return
+
+        raise ValueError(f"Unknown question_id: {question_id}")
