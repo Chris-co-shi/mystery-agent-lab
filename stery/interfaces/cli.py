@@ -2,7 +2,7 @@ from stery.application import ClueSearchService
 from stery.application.game_runtime import GameRuntime
 from stery.application.npc_interaction_service import NPCInteractionService
 from stery.application.rule_judge import RuleJudge
-
+from stery.application.session_recorder import SessionRecorder
 
 class MysteryCliApp:
     """
@@ -27,11 +27,13 @@ class MysteryCliApp:
             npc_interaction_service: NPCInteractionService,
             rule_judge: RuleJudge,
             clue_search_service: ClueSearchService,
+            session_recorder: SessionRecorder | None = None,
     ):
         self.runtime = runtime
         self.npc_interaction_service = npc_interaction_service
         self.rule_judge = rule_judge
         self.clue_search_service = clue_search_service
+        self.session_recorder = session_recorder or SessionRecorder()
 
     def run(self) -> None:
         self.runtime.start()
@@ -212,6 +214,17 @@ class MysteryCliApp:
         print(self.runtime.script.truth.summary)
 
         self.runtime.finish()
+        if self.runtime.state is None:
+            print("会话记录生成失败：游戏状态不存在。")
+            return True
+        record_result = self.session_recorder.save(
+            script=self.runtime.script,
+            state=self.runtime.state,
+        )
+
+        print("\n【会话记录】")
+        print(f"JSON：{record_result.json_path}")
+        print(f"Markdown：{record_result.markdown_path}")
         return True
 
     def _normalize_command(self, raw: str) -> str:

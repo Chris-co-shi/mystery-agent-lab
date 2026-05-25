@@ -6,7 +6,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = PROJECT_ROOT / "scripts"
 
 ENV_FILE = PROJECT_ROOT / ".env"
-
+RUNTIME_DIR = PROJECT_ROOT / "runtime"
+SESSIONS_DIR = RUNTIME_DIR / "sessions"
 
 def resolve_project_path(path: str | Path) -> Path:
     """

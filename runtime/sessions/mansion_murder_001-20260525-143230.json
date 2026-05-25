@@ -1,0 +1,29 @@
+{
+  "session_id": "mansion_murder_001-20260525-143230",
+  "script_id": "mansion_murder_001",
+  "script_title": "庄园夜宴谋杀案",
+  "started_at": "2026-05-25T14:28:04.284095+00:00",
+  "ended_at": "2026-05-25T14:32:30.275699+00:00",
+  "current_phase": "END",
+  "current_round": 0,
+  "is_finished": true,
+  "unlocked_clue_ids": [
+    "clue_broken_glass",
+    "clue_medicine_bottle",
+    "clue_spare_key",
+    "clue_torn_letter",
+    "clue_will_draft"
+  ],
+  "question_history": [],
+  "answer_history": [],
+  "final_vote": {
+    "suspect_character_id": "npc_doctor",
+    "motive": "被胁迫",
+    "method": "下药",
+    "key_evidence": [
+      "clue_torn_letter"
+    ],
+    "submitted_at": "2026-05-25T14:32:30.274497Z"
+  },
+  "judge_result": null
+}
