@@ -1,0 +1,226 @@
+{
+  "script_id": "mansion_murder_001",
+  "title": "庄园夜宴谋杀案",
+  "version": "0.1.0",
+  "background": "暴风雨之夜，企业家顾明远在自己的庄园书房中被发现死亡。晚宴当晚，庄园中只有三名核心嫌疑人：老管家林伯、女儿顾晓棠、私人医生周医生。警方因暴雨无法立刻赶到，玩家需要通过询问嫌疑人和查看线索，找出真正的凶手。",
+  "rules": {
+    "max_question_rounds": 6,
+    "allow_free_question": true,
+    "allow_clue_search": true,
+    "final_vote_required_fields": [
+      "suspect_character_id",
+      "motive",
+      "method",
+      "key_evidence"
+    ]
+  },
+  "characters": [
+    {
+      "character_id": "npc_butler",
+      "name": "林伯",
+      "role": "管家",
+      "is_npc": true,
+      "public_profile": "在顾家服务二十多年的老管家，沉默寡言，熟悉庄园的一切。"
+    },
+    {
+      "character_id": "npc_daughter",
+      "name": "顾晓棠",
+      "role": "死者女儿",
+      "is_npc": true,
+      "public_profile": "顾明远的独生女，刚从国外回来，与父亲关系紧张。"
+    },
+    {
+      "character_id": "npc_doctor",
+      "name": "周医生",
+      "role": "私人医生",
+      "is_npc": true,
+      "public_profile": "顾明远的私人医生，负责他的长期健康管理，当晚也受邀参加晚宴。"
+    }
+  ],
+  "npc_profiles": [
+    {
+      "character_id": "npc_butler",
+      "private_background": "林伯一直知道顾家内部关系紧张。他忠于顾家，但近年来因顾明远准备变卖庄园而心生不满。",
+      "known_facts": [
+        "案发当晚 21:40 左右，林伯在走廊听到书房里传来争吵声。",
+        "他看到周医生在 21:45 左右从书房方向离开。",
+        "他在 22:20 左右发现书房门虚掩，但没有立刻进去。"
+      ],
+      "secrets": [
+        "林伯曾偷偷保留过一把书房备用钥匙。",
+        "他案发当晚去过书房门口，但没有进入。"
+      ],
+      "lie_rules": [
+        "如果被问到是否接近过书房，可以先说自己只是在走廊巡查。",
+        "如果被问到备用钥匙，可以承认自己保管过，但强调只是职责需要。"
+      ],
+      "forbidden_knowledge": [
+        "不知道真正杀死顾明远的人是谁。",
+        "不知道镇静剂被加入酒中。",
+        "不知道顾明远死亡的准确医学原因。"
+      ],
+      "personality": "谨慎、克制、说话简短，习惯维护顾家的体面。"
+    },
+    {
+      "character_id": "npc_daughter",
+      "private_background": "顾晓棠长期与父亲关系不和。她认为父亲控制欲极强，并且反对她继承公司股份。",
+      "known_facts": [
+        "案发当晚 21:20，顾晓棠曾与顾明远在餐厅发生争吵。",
+        "她在 22:30 左右发现父亲倒在书房。",
+        "她知道父亲最近修改过遗嘱，但不知道具体内容。"
+      ],
+      "secrets": [
+        "顾晓棠曾威胁父亲，如果继续冻结她的股份，她会公开家族丑闻。",
+        "她在晚宴前偷偷翻过父亲的文件柜。"
+      ],
+      "lie_rules": [
+        "如果被问到和父亲是否争吵，可以淡化为普通家庭矛盾。",
+        "如果被问到文件柜，可以说只是找自己的证件。"
+      ],
+      "forbidden_knowledge": [
+        "不知道周医生被顾明远勒索。",
+        "不知道药瓶为何出现在书房。",
+        "不知道顾明远真正死亡时间。"
+      ],
+      "personality": "情绪化、防御心强，但在压力下容易说漏细节。"
+    },
+    {
+      "character_id": "npc_doctor",
+      "private_background": "周医生曾在一次医疗事故中被顾明远掌握把柄，多年来被迫为顾明远提供不合规药物。案发当晚，他决定利用镇静剂制造意外死亡。",
+      "known_facts": [
+        "案发当晚 21:45，周医生进入书房为顾明远检查身体。",
+        "他将过量镇静剂混入顾明远的酒中。",
+        "顾明远在 22:10 左右失去意识并死亡。",
+        "他离开书房时故意没有锁门。"
+      ],
+      "secrets": [
+        "周医生是真凶。",
+        "周医生被顾明远长期勒索。",
+        "周医生案发当晚带了一瓶高浓度镇静剂。"
+      ],
+      "lie_rules": [
+        "如果被问到是否进入书房，承认进入，但声称只是例行检查。",
+        "如果被问到药瓶，声称是顾明远长期服用的普通药物。",
+        "如果被问到离开时间，尽量模糊回答。"
+      ],
+      "forbidden_knowledge": [
+        "不能主动承认自己是真凶。",
+        "不能主动说明镇静剂被加入酒中，除非玩家已经掌握关键线索并连续追问。",
+        "不能知道林伯和顾晓棠的内心秘密。"
+      ],
+      "personality": "冷静、专业、措辞谨慎，习惯用医学术语掩饰问题。"
+    }
+  ],
+  "clues": [
+    {
+      "clue_id": "clue_broken_glass",
+      "title": "书房地上的碎酒杯",
+      "content": "书房地毯上有一个碎裂的酒杯，杯底残留少量红酒。杯子旁边没有明显打斗痕迹。",
+      "visibility": "PUBLIC",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_doctor"
+      ],
+      "is_key_clue": true
+    },
+    {
+      "clue_id": "clue_medicine_bottle",
+      "title": "书桌抽屉里的药瓶",
+      "content": "书桌抽屉里有一个没有标签的药瓶，瓶内残留少量透明液体，闻起来有轻微刺鼻气味。",
+      "visibility": "LOCKED",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_doctor"
+      ],
+      "is_key_clue": true
+    },
+    {
+      "clue_id": "clue_torn_letter",
+      "title": "被撕碎的勒索信",
+      "content": "垃圾桶中有几片被撕碎的纸，上面隐约能看到“医疗事故”“证据”“继续听我的安排”等字样。",
+      "visibility": "LOCKED",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_doctor"
+      ],
+      "is_key_clue": true
+    },
+    {
+      "clue_id": "clue_spare_key",
+      "title": "书房备用钥匙",
+      "content": "备用钥匙被放在管家室的旧木盒中，钥匙上有近期使用过的痕迹。",
+      "visibility": "LOCKED",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_butler"
+      ],
+      "is_key_clue": false
+    },
+    {
+      "clue_id": "clue_will_draft",
+      "title": "未签字的遗嘱草稿",
+      "content": "书房文件柜中有一份未签字的遗嘱草稿，内容显示顾明远打算暂时冻结顾晓棠对公司股份的继承权。",
+      "visibility": "LOCKED",
+      "unlock_phase": "SEARCH_CLUE",
+      "related_character_ids": [
+        "npc_daughter"
+      ],
+      "is_key_clue": false
+    }
+  ],
+  "truth": {
+    "murderer_character_id": "npc_doctor",
+    "motive": "周医生曾因医疗事故被顾明远掌握证据，并长期受到勒索和控制。案发当晚，他担心顾明远继续利用证据威胁自己，于是决定杀死顾明远。",
+    "method": "周医生利用私人医生身份进入书房，将过量镇静剂混入顾明远的红酒中，导致顾明远失去意识并死亡。随后他故意制造成普通身体突发状况，并留下其他嫌疑人的可疑线索干扰判断。",
+    "key_clue_ids": [
+      "clue_broken_glass",
+      "clue_medicine_bottle",
+      "clue_torn_letter"
+    ],
+    "summary": "真正的凶手是周医生。林伯和顾晓棠都有可疑行为，但他们的行为分别与备用钥匙和遗嘱有关，并不是杀人行为。关键证据是碎酒杯、无标签药瓶和被撕碎的勒索信。"
+  },
+  "timeline": [
+    {
+      "time": "21:20",
+      "character_id": "npc_daughter",
+      "event": "顾晓棠与顾明远在餐厅因股份继承问题发生争吵。",
+      "is_public": true
+    },
+    {
+      "time": "21:40",
+      "character_id": "npc_butler",
+      "event": "林伯在走廊听到书房方向传来争吵声。",
+      "is_public": false
+    },
+    {
+      "time": "21:45",
+      "character_id": "npc_doctor",
+      "event": "周医生进入书房，以检查身体为由接近顾明远。",
+      "is_public": false
+    },
+    {
+      "time": "21:50",
+      "character_id": "npc_doctor",
+      "event": "周医生将过量镇静剂混入顾明远的红酒中。",
+      "is_public": false
+    },
+    {
+      "time": "22:10",
+      "character_id": "npc_doctor",
+      "event": "顾明远因过量镇静剂失去意识并死亡。",
+      "is_public": false
+    },
+    {
+      "time": "22:20",
+      "character_id": "npc_butler",
+      "event": "林伯经过书房门口，发现门虚掩，但没有进入。",
+      "is_public": false
+    },
+    {
+      "time": "22:30",
+      "character_id": "npc_daughter",
+      "event": "顾晓棠进入书房，发现顾明远倒在地上。",
+      "is_public": true
+    }
+  ]
+}
