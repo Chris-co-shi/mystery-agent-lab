@@ -141,6 +141,7 @@ class MysteryCliApp:
             for clue in result.already_unlocked_clues:
                 print(f"- {clue.title}")
                 print(f"  ID：{clue.id}")
+
     def ask_npc(self) -> None:
         print("\n【询问 NPC】")
         self.show_characters()

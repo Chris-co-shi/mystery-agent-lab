@@ -55,8 +55,8 @@ def main() -> None:
     )
 
     npc_interaction_service = NPCInteractionService(
-        runtime=runtime,
-        npc_agent=npc_agent,
+        state_provider= lambda: runtime.state,
+        responder=npc_agent
     )
 
     rule_judge = RuleJudge(script)
