@@ -36,11 +36,6 @@ class NPCAnswerRecord(RuntimeBaseModel):
     content: str
     created_at: datetime = Field(default_factory=utc_now)
 
-# class QAHistoryItem(BaseModel):
-#     target_character_id: str
-#     player_question: str
-#     npc_answer: str
-
 class GameState(RuntimeBaseModel):
     script_id: str
     current_phase: GamePhase = GamePhase.START
@@ -50,23 +45,8 @@ class GameState(RuntimeBaseModel):
     answer_history: list[NPCAnswerRecord] = Field(default_factory=list)
     final_vote: FinalVote | None = None
     is_finished: bool = False
-    # qa_history: list[QAHistoryItem] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
 
     def touch(self) -> None:
         self.updated_at = utc_now()
-
-    # def add_qa_history(
-    #         self,
-    #         target_character_id: str,
-    #         player_question: str,
-    #         npc_answer: str,
-    # ) -> None:
-    #     self.qa_history.append(
-    #         QAHistoryItem(
-    #             target_character_id=target_character_id,
-    #             player_question=player_question,
-    #             npc_answer=npc_answer,
-    #         )
-    #     )
