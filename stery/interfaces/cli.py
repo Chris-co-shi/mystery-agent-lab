@@ -85,6 +85,11 @@ class MysteryCliApp:
             print("暂无问答记录。")
             return
 
+        characters_by_id = {
+            character.id: character
+            for character in self.runtime.list_characters()
+        }
+
         answers_by_question_id = {
             answer.question_id: answer
             for answer in state.answer_history
@@ -92,15 +97,20 @@ class MysteryCliApp:
 
         for index, question in enumerate(state.question_history, start=1):
             answer = answers_by_question_id.get(question.question_id)
+            character = characters_by_id.get(question.target_character_id)
 
+            if character is None:
+                npc_display_name = question.target_character_id
+            else:
+                npc_display_name = f"{character.name}（{character.id}）"
             print()
-            print(f"[{index}] 询问 NPC：{question.target_character_id}")
+            print(f"[{index}] 询问 ：{npc_display_name}")
             print(f"玩家：{question.content}")
 
             if answer is None:
                 print("NPC：<暂无回答记录>")
             else:
-                print(f"NPC：{answer.content}")
+                print(f"{npc_display_name}：{answer.content}")
 
     def show_background(self) -> None:
         print("\n【案件背景】")
