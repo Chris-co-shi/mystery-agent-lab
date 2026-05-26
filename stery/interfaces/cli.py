@@ -4,6 +4,7 @@ from stery.application.npc_interaction_service import NPCInteractionService
 from stery.application.rule_judge import RuleJudge
 from stery.application.session_recorder import SessionRecorder
 
+
 class MysteryCliApp:
     """
     剧本杀命令行应用。
@@ -70,6 +71,36 @@ class MysteryCliApp:
         print(f"NPC 回答次数：{len(state.answer_history)}")
         print(f"是否已提交最终推理：{'是' if state.final_vote is not None else '否'}")
         print(f"是否已结束：{'是' if state.is_finished else '否'}")
+
+    def show_history(self) -> None:
+        print("\n【问答历史】")
+
+        state = self.runtime.state
+
+        if state is None:
+            print("游戏尚未开始。")
+            return
+
+        if not state.question_history:
+            print("暂无问答记录。")
+            return
+
+        answers_by_question_id = {
+            answer.question_id: answer
+            for answer in state.answer_history
+        }
+
+        for index, question in enumerate(state.question_history, start=1):
+            answer = answers_by_question_id.get(question.question_id)
+
+            print()
+            print(f"[{index}] 询问 NPC：{question.target_character_id}")
+            print(f"玩家：{question.content}")
+
+            if answer is None:
+                print("NPC：<暂无回答记录>")
+            else:
+                print(f"NPC：{answer.content}")
 
     def show_background(self) -> None:
         print("\n【案件背景】")
@@ -234,7 +265,8 @@ class MysteryCliApp:
             "3": "/clues",
             "4": "/search",
             "5": "/ask",
-            "6": "/submit",
+            "6": "/history",
+            "7": "/submit",
             "0": "/quit",
             "help": "/help",
             "status": "/status",
@@ -243,6 +275,7 @@ class MysteryCliApp:
             "clues": "/clues",
             "search": "/search",
             "ask": "/ask",
+            "history": "/history",
             "submit": "/submit",
             "quit": "/quit",
             "exit": "/quit",
@@ -294,7 +327,9 @@ class MysteryCliApp:
         if command == '/ask':
             self.ask_npc()
             return True
-
+        if command == "/history":
+            self.show_history()
+            return True
         if command == "/submit":
             return not self.submit_final_vote()
 
@@ -315,9 +350,10 @@ class MysteryCliApp:
         print("/clues        查看当前线索")
         print("/search       搜索线索")
         print("/ask          询问 NPC")
+        print("/history     查看问答历史")
         print("/submit       提交最终推理")
         print("/quit         退出游戏")
         print("")
         print("兼容数字快捷键：")
-        print("1=背景  2=人物  3=线索  4=搜索  5=询问  6=提交  0=退出")
+        print("1=背景  2=人物  3=线索  4=搜索  5=询问  6=历史  7=提交  0=退出")
         print("==============================")

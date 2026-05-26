@@ -4,7 +4,7 @@ from typing import Protocol
 from pydantic import BaseModel
 
 from stery.application.npc_guardrail import NpcGuardrail
-from stery.domain.state import GameState, QAHistoryItem
+from stery.domain.state import GameState
 
 
 class NPCResponder(Protocol):
@@ -69,6 +69,8 @@ class NPCInteractionService:
     def __init__(
             self,
             state_provider: Callable[[], GameState | None],
+            record_question: Callable[[str, str], GameState],
+            record_npc_answer: Callable[[str, str], GameState],
             responder: NPCResponder,
             npc_guardrail: NpcGuardrail | None = None,
     ):
@@ -90,6 +92,8 @@ class NPCInteractionService:
         self.state_provider = state_provider
         self.responder = responder
         self.npc_guardrail = npc_guardrail or NpcGuardrail()
+        self.record_question = record_question
+        self.record_npc_answer = record_npc_answer
 
     def ask_npc(
             self,
@@ -113,7 +117,10 @@ class NPCInteractionService:
             )
 
         state = self._require_state()
-
+        self.record_question(
+            target_character_id,
+            original_question,
+        )
         guardrail_result = self.npc_guardrail.check_question(
             question=original_question,
         )
@@ -123,7 +130,10 @@ class NPCInteractionService:
                     guardrail_result.fallback_answer
                     or self.npc_guardrail.build_llm_error_fallback()
             )
-
+            self.record_npc_answer(
+                target_character_id,
+                answer,
+            )
             _touch_state(state)
 
             return NPCInteractionResult(
@@ -148,15 +158,17 @@ class NPCInteractionService:
                 question=original_question,
                 answer=raw_answer,
             )
-            state.add_qa_history(
-                target_character_id=target_character_id,
-                player_question=original_question,
-                npc_answer=safe_answer,
+            self.record_npc_answer(
+                target_character_id,
+                safe_answer
             )
-
         except Exception as e:
             print(f"ask error:{e}")
             safe_answer = self.npc_guardrail.build_llm_error_fallback()
+            self.record_npc_answer(
+                target_character_id,
+                safe_answer
+            )
 
         _touch_state(state)
 

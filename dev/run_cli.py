@@ -1,6 +1,5 @@
 from bootstrap import bootstrap_project
 
-
 bootstrap_project()
 from dotenv import load_dotenv
 import argparse
@@ -55,8 +54,10 @@ def main() -> None:
     )
 
     npc_interaction_service = NPCInteractionService(
-        state_provider= lambda: runtime.state,
-        responder=npc_agent
+        state_provider=lambda: runtime.state,
+        responder=npc_agent,
+        record_npc_answer=runtime.record_npc_answer,
+        record_question=runtime.record_question
     )
 
     rule_judge = RuleJudge(script)
@@ -81,6 +82,7 @@ def print_available_scripts(repository: ScriptRepository) -> None:
     print("可用剧本：")
     for script_id in scripts:
         print(f"- {script_id}")
+
 
 if __name__ == "__main__":
     main()
