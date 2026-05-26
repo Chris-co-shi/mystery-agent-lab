@@ -31,3 +31,9 @@ class ClueVisibility(Enum):
     LOCKED = "LOCKED"
     # 隐藏
     HIDDEN = "HIDDEN"
+
+
+class InvestigationRoundStatus(Enum):
+    """调查轮次状态"""
+    OPEN = "OPEN"
+    CLOSED = "CLOSED"
