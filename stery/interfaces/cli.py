@@ -3,6 +3,7 @@ from stery.application.game_runtime import GameRuntime
 from stery.application.npc_interaction_service import NPCInteractionService
 from stery.application.rule_judge import RuleJudge
 from stery.application.session_recorder import SessionRecorder
+from stery.domain.state import InvestigationRound
 
 
 class MysteryCliApp:
@@ -172,6 +173,62 @@ class MysteryCliApp:
             characters_by_id=characters_by_id,
         )
 
+    def close_round(self) -> None:
+        print("\n【关闭调查轮】")
+
+        state = self.runtime.state
+
+        if state is None:
+            print("游戏尚未开始。")
+            return
+
+        active_round = self._find_active_investigation_round(state)
+
+        if active_round is None:
+            print("当前没有开启中的调查轮。")
+            return
+
+        closed_round_no = active_round.round_no
+
+        try:
+            new_state = self.runtime.close_current_round()
+        except Exception as exc:
+            print(f"关闭调查轮失败：{exc}")
+            return
+
+        new_active_round = self._find_active_investigation_round(new_state)
+
+        print(f"第 {closed_round_no} 轮已关闭。")
+
+        if new_active_round is None:
+            print("未能开启新的调查轮。")
+            return
+
+        print(f"第 {new_active_round.round_no} 轮已开启。")
+
+    def show_rounds(self) -> None:
+        print("\n【调查轮次列表】")
+
+        state = self.runtime.state
+
+        if state is None:
+            print("游戏尚未开始。")
+            return
+
+        if not state.investigation_rounds:
+            print("暂无调查轮记录。")
+            return
+
+        for investigation_round in state.investigation_rounds:
+            marker = "（当前）" if investigation_round.round_id == state.active_round_id else ""
+
+            print(
+                f"第 {investigation_round.round_no} 轮："
+                f"{investigation_round.status.value}，"
+                f"提问 {len(investigation_round.question_ids)} 次"
+                f"{marker}"
+            )
+
     def show_background(self) -> None:
         print("\n【案件背景】")
         print(self.runtime.get_background())
@@ -330,15 +387,6 @@ class MysteryCliApp:
 
     def _normalize_command(self, raw: str) -> str:
         aliases = {
-            "1": "/background",
-            "2": "/characters",
-            "3": "/clues",
-            "4": "/search",
-            "5": "/ask",
-            "6": "/history",
-            "7": "/review",
-            "8": "/submit",
-            "0": "/quit",
             "help": "/help",
             "status": "/status",
             "background": "/background",
@@ -349,6 +397,8 @@ class MysteryCliApp:
             "history": "/history",
             "submit": "/submit",
             "review": "/review",
+            "close-round": "/close-round",
+            "rounds": "/rounds",
             "summary": "/review",
             "quit": "/quit",
             "exit": "/quit",
@@ -400,12 +450,23 @@ class MysteryCliApp:
         if command == '/ask':
             self.ask_npc()
             return True
+
         if command == "/history":
             self.show_history()
             return True
+
         if command == "/review":
             self.show_review()
             return True
+
+        if command == "/close-round":
+            self.close_round()
+            return True
+
+        if command == "/rounds":
+            self.show_rounds()
+            return True
+
         if command == "/submit":
             return not self.submit_final_vote()
 
@@ -428,14 +489,14 @@ class MysteryCliApp:
         print("/ask          询问 NPC")
         print("/history     查看问答历史")
         print("/review       查看当前调查轮摘要")
+        print("/close-round  关闭当前调查轮并开启下一轮")
+        print("/rounds       查看所有调查轮")
         print("/submit       提交最终推理")
         print("/quit         退出游戏")
         print("")
-        print("兼容数字快捷键：")
-        print("1=背景  2=人物  3=线索  4=搜索  5=询问  6=历史  7=查看当轮调查  8=提交  0=退出")
         print("==============================")
 
-    def _find_active_investigation_round(self, state):
+    def _find_active_investigation_round(self, state) -> InvestigationRound | None:
         if state.active_round_id is None:
             return None
 
