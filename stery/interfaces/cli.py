@@ -112,6 +112,66 @@ class MysteryCliApp:
             else:
                 print(f"{npc_display_name}：{answer.content}")
 
+    def show_review(self) -> None:
+        print("\n【当前调查轮摘要】")
+
+        state = self.runtime.state
+
+        if state is None:
+            print("游戏尚未开始。")
+            return
+
+        active_round = self._find_active_investigation_round(state)
+
+        if active_round is None:
+            print("当前没有开启中的调查轮。")
+            return
+
+        characters_by_id = {
+            character.id: character
+            for character in self.runtime.list_characters()
+        }
+
+        questions_by_id = {
+            question.question_id: question
+            for question in state.question_history
+        }
+
+        answers_by_question_id = {
+            answer.question_id: answer
+            for answer in state.answer_history
+        }
+
+        round_questions = [
+            questions_by_id[question_id]
+            for question_id in active_round.question_ids
+            if question_id in questions_by_id
+        ]
+
+        round_answer_count = sum(
+            1
+            for question in round_questions
+            if question.question_id in answers_by_question_id
+        )
+
+        print(f"调查轮次：第 {active_round.round_no} 轮")
+        print(f"轮次状态：{active_round.status.value}")
+        print(f"本轮提问次数：{len(round_questions)}")
+        print(f"本轮回答次数：{round_answer_count}")
+        print(f"已发现线索数：{len(state.unlocked_clue_ids)}")
+        print(f"当前总提问次数：{len(state.question_history)}")
+
+        self._show_review_asked_npcs(
+            questions=round_questions,
+            characters_by_id=characters_by_id,
+        )
+
+        self._show_review_round_questions(
+            questions=round_questions,
+            answers_by_question_id=answers_by_question_id,
+            characters_by_id=characters_by_id,
+        )
+
     def show_background(self) -> None:
         print("\n【案件背景】")
         print(self.runtime.get_background())
@@ -276,7 +336,8 @@ class MysteryCliApp:
             "4": "/search",
             "5": "/ask",
             "6": "/history",
-            "7": "/submit",
+            "7": "/review",
+            "8": "/submit",
             "0": "/quit",
             "help": "/help",
             "status": "/status",
@@ -287,6 +348,8 @@ class MysteryCliApp:
             "ask": "/ask",
             "history": "/history",
             "submit": "/submit",
+            "review": "/review",
+            "summary": "/review",
             "quit": "/quit",
             "exit": "/quit",
         }
@@ -340,6 +403,9 @@ class MysteryCliApp:
         if command == "/history":
             self.show_history()
             return True
+        if command == "/review":
+            self.show_review()
+            return True
         if command == "/submit":
             return not self.submit_final_vote()
 
@@ -361,9 +427,87 @@ class MysteryCliApp:
         print("/search       搜索线索")
         print("/ask          询问 NPC")
         print("/history     查看问答历史")
+        print("/review       查看当前调查轮摘要")
         print("/submit       提交最终推理")
         print("/quit         退出游戏")
         print("")
         print("兼容数字快捷键：")
-        print("1=背景  2=人物  3=线索  4=搜索  5=询问  6=历史  7=提交  0=退出")
+        print("1=背景  2=人物  3=线索  4=搜索  5=询问  6=历史  7=查看当轮调查  8=提交  0=退出")
         print("==============================")
+
+    def _find_active_investigation_round(self, state):
+        if state.active_round_id is None:
+            return None
+
+        for investigation_round in state.investigation_rounds:
+            if investigation_round.round_id == state.active_round_id:
+                return investigation_round
+
+        return None
+
+    def _show_review_asked_npcs(
+            self,
+            questions,
+            characters_by_id: dict,
+    ) -> None:
+        print("\n【本轮已询问 NPC】")
+
+        if not questions:
+            print("暂无已询问 NPC。")
+            return
+
+        question_count_by_character_id: dict[str, int] = {}
+
+        for question in questions:
+            character_id = question.target_character_id
+            question_count_by_character_id[character_id] = (
+                    question_count_by_character_id.get(character_id, 0) + 1
+            )
+
+        for character_id, count in question_count_by_character_id.items():
+            npc_display_name = self._format_character_display_name(
+                character_id=character_id,
+                characters_by_id=characters_by_id,
+            )
+            print(f"- {npc_display_name}：{count} 次")
+
+    def _show_review_round_questions(
+            self,
+            questions,
+            answers_by_question_id: dict,
+            characters_by_id: dict,
+    ) -> None:
+        print("\n【本轮问答】")
+
+        if not questions:
+            print("暂无问答记录。")
+            return
+
+        for index, question in enumerate(questions, start=1):
+            answer = answers_by_question_id.get(question.question_id)
+
+            npc_display_name = self._format_character_display_name(
+                character_id=question.target_character_id,
+                characters_by_id=characters_by_id,
+            )
+
+            print()
+            print(f"[{index}] 询问 NPC：{npc_display_name}")
+            print(f"玩家：{question.content}")
+
+            if answer is None:
+                print("NPC：<暂无回答记录>")
+            else:
+                print(f"NPC：{answer.content}")
+
+    def _format_character_display_name(
+            self,
+            character_id: str,
+            characters_by_id: dict,
+    ) -> str:
+        character = characters_by_id.get(character_id)
+
+        if character is None:
+            return character_id
+
+        return f"{character.name}（{character.id}）"
