@@ -37,3 +37,11 @@ class InvestigationRoundStatus(Enum):
     """调查轮次状态"""
     OPEN = "OPEN"
     CLOSED = "CLOSED"
+
+
+class CaseActionType(Enum):
+    """案件操作类型"""
+    SEARCH = "SEARCH"
+    DISCOVER_CLUE = "DISCOVER_CLUE"
+    ASK_NPC = "ASK_NPC"
+    SUBMIT = "SUBMIT"

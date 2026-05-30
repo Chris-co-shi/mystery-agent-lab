@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from stery.domain.case_record import CaseRecord
 from stery.domain.enums import GamePhase, InvestigationRoundStatus
 
 
@@ -59,6 +60,8 @@ class GameState(RuntimeBaseModel):
     # 激活轮次Id
     active_round_id: str | None = None
     investigation_rounds: list[InvestigationRound] = Field(default_factory=list)
+    # 案件记录
+    case_records: list[CaseRecord] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
 
