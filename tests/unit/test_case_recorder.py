@@ -26,7 +26,7 @@ def test_record_search_should_append_search_case_record():
     assert state.case_records[0] == record
     assert record.action_type == CaseActionType.SEARCH
     assert record.title == "搜索：书房"
-    assert record.summary == "玩家搜索了：书房"
+    assert record.summary == "搜索：书房"
     assert record.metadata["target"] == "书房"
     assert record.id
     assert record.created_at is not None
@@ -76,8 +76,8 @@ def test_record_ask_npc_should_append_ask_npc_case_record():
     assert record.action_type == CaseActionType.ASK_NPC
     assert record.title == "询问：白川"
     assert record.summary == "问：案发时你在哪里？\n答：我一直在前台。"
-    assert record.metadata["character_id"] == "npc_owner"
-    assert record.metadata["character_name"] == "白川"
+    assert record.metadata["npc_id"] == "npc_owner"
+    assert record.metadata["npc_name"] == "白川"
     assert record.metadata["question"] == "案发时你在哪里？"
     assert record.metadata["answer"] == "我一直在前台。"
     assert record.id

@@ -4,7 +4,7 @@ import pytest
 
 from stery.application.clue_search_service import ClueSearchService
 from stery.application.game_runtime import GameRuntime
-from stery.application.script_loader import load_script
+from stery.domain.enums import CaseActionType
 from stery.script_repository import LocalFileScriptRepository
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -56,3 +56,22 @@ def test_search_unknown_keyword_returns_no_new_clue():
     assert len(result.unlocked_clues) == 0
     assert len(result.already_unlocked_clues) == 0
     assert result.message == "没有发现新的线索。"
+
+def test_search_unlocks_locked_clue_should_record_discovered_clue_case_record():
+    service, state = build_service_and_state()
+
+    result = service.search(state, "抽屉")
+    discovered_clue = result.unlocked_clues[0]
+
+    assert len(state.case_records) == 1
+
+    record = state.case_records[0]
+    assert record.action_type == CaseActionType.DISCOVER_CLUE
+    assert record.title == f"发现线索：{discovered_clue.title}"
+    assert record.summary == f"玩家发现线索：{discovered_clue.title}"
+
+    assert record.metadata["clue_id"] == discovered_clue.id
+    assert record.metadata["clue_name"] == discovered_clue.title
+    assert record.metadata["source_type"] == "SEARCH"
+    assert record.metadata["source_id"] == "抽屉"
+    assert record.metadata["related_question_id"] is None

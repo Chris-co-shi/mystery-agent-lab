@@ -17,14 +17,13 @@ class CaseRecorder:
 
         record = CaseRecord(
             action_type=CaseActionType.SEARCH,
-            title=f'搜索:{target}',
-            summary=f'搜索:{target}',
+            title=f'搜索：{target}',
+            summary=f'搜索：{target}',
             metadata={
                 "target": target
             }
         )
-        self._append_record(state, record)
-        return record
+        return self._append_record(state, record)
 
     def record_discovered_clue(
             self,
@@ -48,8 +47,7 @@ class CaseRecorder:
                 "related_question_id": related_question_id
             }
         )
-        self._append_record(state, record)
-        return record
+        return self._append_record(state, record)
 
     def record_ask_npc(
             self,
@@ -62,8 +60,8 @@ class CaseRecorder:
         """记录与 NPC 交互行为"""
         record = CaseRecord(
             action_type=CaseActionType.ASK_NPC,
-            title=f'询问:{npc_name}',
-            summary=f'询问:{question}\n回答:{answer}',
+            title=f'询问：{npc_name}',
+            summary=f'问：{question}\n答：{answer}',
             metadata={
                 "npc_id": npc_id,
                 "npc_name": npc_name,
@@ -71,8 +69,7 @@ class CaseRecorder:
                 "answer": answer
             }
         )
-        self._append_record(state, record)
-        return record
+        return self._append_record(state, record)
 
     def record_submit(
             self,
@@ -96,7 +93,7 @@ class CaseRecorder:
         record = CaseRecord(
             action_type=CaseActionType.SUBMIT,
             title=f'最终指控',
-            summary=f'最终指控:{accused_npc_name}\n推理:{reasoning}',
+            summary=f'凶手：{accused_npc_name}\n推理：{reasoning}',
             metadata={
                 "accused_npc_id": accused_npc_id,
                 "accused_npc_name": accused_npc_name,
@@ -105,8 +102,8 @@ class CaseRecorder:
                 "judge_result": judge_result
             }
         )
-        self._append_record(state, record)
-        return record
+        return self._append_record(state, record)
 
-    def _append_record(self, state: GameState, record: CaseRecord):
+    def _append_record(self, state: GameState, record: CaseRecord) -> CaseRecord:
         state.case_records.append(record)
+        return record

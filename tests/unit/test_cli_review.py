@@ -87,9 +87,7 @@ def test_show_review_when_active_round_has_no_questions(capsys):
     assert "本轮提问次数：0" in captured.out
     assert "本轮回答次数：0" in captured.out
     assert "当前总提问次数：0" in captured.out
-    assert "【本轮已询问 NPC】" in captured.out
     assert "暂无已询问 NPC。" in captured.out
-    assert "【本轮问答】" in captured.out
     assert "暂无问答记录。" in captured.out
 
 
