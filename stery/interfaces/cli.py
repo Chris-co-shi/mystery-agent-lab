@@ -113,7 +113,7 @@ class MysteryCliApp:
                 print(f"{npc_display_name}：{answer.content}")
 
     def show_review(self) -> None:
-        print("\n【调查摘要】")
+        print("\n【调查记录】")
 
         state = self.runtime.state
 
@@ -121,31 +121,14 @@ class MysteryCliApp:
             print("游戏尚未开始。")
             return
 
-        characters_by_id = {
-            character.id: character
-            for character in self.runtime.list_characters()
-        }
+        if not state.case_records:
+            print("暂无调查记录。")
+            return
 
-        answers_by_question_id = {
-            answer.question_id: answer
-            for answer in state.answer_history
-        }
-
-
-        print(f"已发现线索数：{len(state.unlocked_clue_ids)}")
-        print(f"当前总提问次数：{len(state.question_history)}")
-        print(f"累计回答次数：{len(state.answer_history)}")
-
-        self._show_review_asked_npcs(
-            questions=state.question_history,
-            characters_by_id=characters_by_id,
-        )
-
-        self._show_review_questions(
-            questions=state.question_history,
-            answers_by_question_id=answers_by_question_id,
-            characters_by_id=characters_by_id,
-        )
+        for index, record in enumerate(state.case_records, start=1):
+            print()
+            print(f"{index}. {record.title}")
+            print(f"   {record.summary}")
 
     def show_background(self) -> None:
         print("\n【案件背景】")
@@ -335,6 +318,7 @@ class MysteryCliApp:
         record_result = self.session_recorder.save(
             script=self.runtime.script,
             state=self.runtime.state,
+            judge_result=result,
         )
 
         print("\n【会话记录】")

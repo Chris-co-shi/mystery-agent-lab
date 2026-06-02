@@ -17,8 +17,8 @@ class CaseRecorder:
 
         record = CaseRecord(
             action_type=CaseActionType.SEARCH,
-            title=f'搜索：{target}',
-            summary=f'搜索：{target}',
+            title=f"搜索：{target}",
+            summary=f"玩家搜索了：{target}",
             metadata={
                 "target": target
             }

@@ -47,18 +47,15 @@ def test_show_review_when_game_not_started(capsys):
     assert "游戏尚未开始。" in captured.out
 
 
-def test_show_review_when_no_questions(capsys):
-    state = GameState(script_id="snow_inn_murder")
-    app = build_app(state=state)
+def test_show_review_when_game_not_started(capsys):
+    app = build_app(state=None)
 
     app.show_review()
 
     captured = capsys.readouterr()
 
-    assert "【调查摘要】" in captured.out
-    assert "暂无已询问 NPC。" in captured.out
-    assert "暂无问答记录。" in captured.out
-
+    assert "【调查记录】" in captured.out
+    assert "游戏尚未开始。" in captured.out
 
 
 
