@@ -6,20 +6,9 @@ from stery.domain.state import (
     GameState,
     InvestigationRound,
     NPCAnswerRecord,
-    QuestionRecord, utc_now,
+    QuestionRecord,
 )
 
-
-def _require_active_investigation_round(state: GameState) -> InvestigationRound:
-    if state.active_round_id is None:
-        raise RuntimeError("No active investigation round")
-
-    for investigation_round in state.investigation_rounds:
-        if investigation_round.round_id == state.active_round_id:
-            if investigation_round.status != InvestigationRoundStatus.OPEN:
-                raise ValueError("Active investigation round is closed")
-            return investigation_round
-    raise RuntimeError(f"Active investigation round not found: {state.active_round_id}")
 
 
 def _ensure_question_exists(
@@ -39,18 +28,6 @@ def _ensure_question_exists(
             return
 
     raise ValueError(f"Unknown question_id: {question_id}")
-
-
-def _open_new_investigation_round(state: GameState) -> InvestigationRound:
-    # 创建新轮次
-    next_round_no = len(state.investigation_rounds) + 1
-    investigation_round = InvestigationRound(
-        round_no=next_round_no
-    )
-    state.investigation_rounds.append(investigation_round)
-    state.active_round_id = investigation_round.round_id
-
-    return investigation_round
 
 
 def _find_latest_question_id(
@@ -92,7 +69,7 @@ class GameRuntime:
             unlocked_clue_ids=self.clue_manager.get_initial_unlocked_clue_ids(),
             is_finished=False,
         )
-        _open_new_investigation_round(state)
+        # _open_new_investigation_round(state)
         self.state = state
         return state
 
@@ -122,17 +99,12 @@ class GameRuntime:
         self._ensure_character_exists(target_character_id)
         self._ensure_question_round_available(state)
 
-        active_round = _require_active_investigation_round(state)
-
         question_record = QuestionRecord(
             target_character_id=target_character_id,
             content=question,
         )
 
         state.question_history.append(question_record)
-        active_round.question_ids.append(question_record.question_id)
-
-        state.current_round += 1
         state.current_phase = GamePhase.FREE_QUESTION
         state.touch()
 
@@ -231,19 +203,3 @@ class GameRuntime:
                 f"Question round limit exceeded: "
                 f"{state.current_round}/{self.script.rules.max_question_rounds}"
             )
-
-    def close_current_round(self) -> GameState:
-        state = self._require_started()
-
-        if state.is_finished:
-            raise ValueError("Game has already finished.")
-
-        active_round = _require_active_investigation_round(state)
-
-        active_round.status = InvestigationRoundStatus.CLOSED
-        active_round.closed_at = utc_now()
-
-        _open_new_investigation_round(state)
-
-        state.touch()
-        return state
