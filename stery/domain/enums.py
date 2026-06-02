@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum
 
 """
 定义枚举
@@ -31,12 +31,6 @@ class ClueVisibility(Enum):
     LOCKED = "LOCKED"
     # 隐藏
     HIDDEN = "HIDDEN"
-
-
-class InvestigationRoundStatus(Enum):
-    """调查轮次状态"""
-    OPEN = "OPEN"
-    CLOSED = "CLOSED"
 
 
 class CaseActionType(Enum):

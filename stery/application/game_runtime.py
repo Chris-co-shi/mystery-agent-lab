@@ -1,10 +1,9 @@
 from stery.application.clue_manager import ClueManager
-from stery.domain.enums import GamePhase, InvestigationRoundStatus
+from stery.domain.enums import GamePhase
 from stery.domain.models import Character, GameScript
 from stery.domain.state import (
     FinalVote,
     GameState,
-    InvestigationRound,
     NPCAnswerRecord,
     QuestionRecord,
 )
@@ -65,7 +64,6 @@ class GameRuntime:
         state = GameState(
             script_id=self.script.id,
             current_phase=GamePhase.BACKGROUND_INTRO,
-            current_round=0,
             unlocked_clue_ids=self.clue_manager.get_initial_unlocked_clue_ids(),
             is_finished=False,
         )
@@ -97,7 +95,7 @@ class GameRuntime:
         state = self._require_started()
 
         self._ensure_character_exists(target_character_id)
-        self._ensure_question_round_available(state)
+        # self._ensure_question_round_available(state)
 
         question_record = QuestionRecord(
             target_character_id=target_character_id,
@@ -197,9 +195,9 @@ class GameRuntime:
             if clue_id not in existing_clue_ids:
                 raise ValueError(f"Unknown clue_id: {clue_id}")
 
-    def _ensure_question_round_available(self, state: GameState) -> None:
-        if state.current_round >= self.script.rules.max_question_rounds:
-            raise ValueError(
-                f"Question round limit exceeded: "
-                f"{state.current_round}/{self.script.rules.max_question_rounds}"
-            )
+    # def _ensure_question_round_available(self, state: GameState) -> None:
+    #     if state.current_round >= self.script.rules.max_question_rounds:
+    #         raise ValueError(
+    #             f"Question round limit exceeded: "
+    #             f"{state.current_round}/{self.script.rules.max_question_rounds}"
+    #         )

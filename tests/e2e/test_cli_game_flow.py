@@ -46,8 +46,10 @@ def test_single_player_cli_game_flow_success():
     clue_search_service = ClueSearchService(script)
     npc_agent = FakeNPCAgent()
     npc_interaction_service = NPCInteractionService(
-        runtime=runtime,
-        npc_agent=npc_agent,
+        state_provider=lambda: runtime.state,
+        responder=npc_agent,
+        record_npc_answer=runtime.record_npc_answer,
+        record_question=runtime.record_question
     )
     rule_judge = RuleJudge(script)
 
@@ -88,7 +90,7 @@ def test_single_player_cli_game_flow_success():
     )
 
     assert interaction_result.target_character_id == "npc_butler"
-    assert interaction_result.player_question == "案发当晚 22 点左右，你在哪里？"
+    assert interaction_result.question == "案发当晚 22 点左右，你在哪里？"
     assert interaction_result.npc_answer
 
     assert len(state.question_history) == 1

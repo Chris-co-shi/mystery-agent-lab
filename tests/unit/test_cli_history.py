@@ -85,9 +85,9 @@ def test_show_history_should_display_npc_name_and_id(capsys):
     captured = capsys.readouterr()
 
     assert "【问答历史】" in captured.out
-    assert "[1] 询问 NPC：程曼（npc_pharmacist）" in captured.out
+    assert "[1] 询问：程曼（npc_pharmacist）" in captured.out
     assert "玩家：你是谁" in captured.out
-    assert "NPC：我是程曼，诊所的药剂师。" in captured.out
+    assert "程曼（npc_pharmacist）：我是程曼，诊所的药剂师。" in captured.out
 
 
 def test_show_history_should_fallback_to_npc_id_when_character_not_found(capsys):
@@ -123,9 +123,9 @@ def test_show_history_should_fallback_to_npc_id_when_character_not_found(capsys)
     captured = capsys.readouterr()
 
     assert "【问答历史】" in captured.out
-    assert "[1] 询问 NPC：npc_photographer" in captured.out
+    assert "[1] 询问：npc_photographer" in captured.out
     assert "玩家：你在这里干什么？" in captured.out
-    assert "NPC：我正在拍摄雪景。" in captured.out
+    assert "npc_photographer：我正在拍摄雪景。" in captured.out
 
 
 def test_show_history_should_handle_missing_answer(capsys):
@@ -155,6 +155,6 @@ def test_show_history_should_handle_missing_answer(capsys):
     captured = capsys.readouterr()
 
     assert "【问答历史】" in captured.out
-    assert "[1] 询问 NPC：陆青（npc_photographer）" in captured.out
+    assert "[1] 询问：陆青（npc_photographer）" in captured.out
     assert "玩家：你在这里干什么？" in captured.out
     assert "NPC：<暂无回答记录>" in captured.out

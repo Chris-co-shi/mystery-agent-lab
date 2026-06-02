@@ -4,7 +4,6 @@ import pytest
 
 from stery.application.game_runtime import GameRuntime
 from stery.application.rule_judge import RuleJudge
-from stery.application.script_loader import load_script
 from stery.domain.state import FinalVote
 from stery.script_repository import LocalFileScriptRepository
 

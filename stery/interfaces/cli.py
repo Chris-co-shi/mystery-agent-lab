@@ -3,7 +3,6 @@ from stery.application.game_runtime import GameRuntime
 from stery.application.npc_interaction_service import NPCInteractionService
 from stery.application.rule_judge import RuleJudge
 from stery.application.session_recorder import SessionRecorder
-from stery.domain.state import InvestigationRound
 
 
 class MysteryCliApp:
@@ -97,14 +96,14 @@ class MysteryCliApp:
 
         for index, question in enumerate(state.question_history, start=1):
             answer = answers_by_question_id.get(question.question_id)
-            character = characters_by_id.get(question.target_character_id)
 
-            if character is None:
-                npc_display_name = question.target_character_id
-            else:
-                npc_display_name = f"{character.name}（{character.id}）"
+            npc_display_name = self._format_character_display_name(
+                character_id=question.target_character_id,
+                characters_by_id=characters_by_id,
+            )
+
             print()
-            print(f"[{index}] 询问 ：{npc_display_name}")
+            print(f"[{index}] 询问：{npc_display_name}")
             print(f"玩家：{question.content}")
 
             if answer is None:

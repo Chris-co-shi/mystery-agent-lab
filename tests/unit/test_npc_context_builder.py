@@ -4,7 +4,6 @@ import pytest
 
 from stery.application.game_runtime import GameRuntime
 from stery.application.npc_context_builder import NPCContextBuilder
-from stery.application.script_loader import load_script
 from stery.script_repository import LocalFileScriptRepository
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

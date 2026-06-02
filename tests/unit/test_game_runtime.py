@@ -3,7 +3,6 @@ from pathlib import Path
 import pytest
 
 from stery.application.game_runtime import GameRuntime
-from stery.application.script_loader import load_script
 from stery.domain.enums import GamePhase
 from stery.script_repository import LocalFileScriptRepository
 
@@ -23,7 +22,6 @@ def test_start_game_success():
 
     assert state.script_id == runtime.script.id
     assert state.current_phase == GamePhase.BACKGROUND_INTRO
-    assert state.current_round == 0
     assert state.is_finished is False
     assert "clue_broken_glass" in state.unlocked_clue_ids
 
@@ -121,7 +119,6 @@ def test_record_question_success():
     )
 
     assert state.current_phase == GamePhase.FREE_QUESTION
-    assert state.current_round == 1
     assert len(state.question_history) == 1
 
     question = state.question_history[0]
@@ -139,20 +136,6 @@ def test_record_question_unknown_character_failed():
             target_character_id="npc_not_exists",
             question="你是谁？",
         )
-
-
-def test_record_question_round_limit_failed():
-    runtime = build_runtime()
-    state = runtime.start()
-
-    state.current_round = runtime.script.rules.max_question_rounds
-
-    with pytest.raises(ValueError, match="Question round limit exceeded"):
-        runtime.record_question(
-            target_character_id="npc_butler",
-            question="还能继续问吗？",
-        )
-
 
 def test_submit_final_vote_requires_game_started():
     runtime = build_runtime()

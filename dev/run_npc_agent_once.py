@@ -36,8 +36,10 @@ def main():
     npc_agent = NPCAgent(script=script, llm_client=llm_client)
 
     service = NPCInteractionService(
-        runtime=runtime,
-        npc_agent=npc_agent,
+        state_provider=lambda: runtime.state,
+        responder=npc_agent,
+        record_npc_answer=runtime.record_npc_answer,
+        record_question=runtime.record_question
     )
 
     result = service.ask_npc(

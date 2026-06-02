@@ -78,7 +78,12 @@ def build_runtime() -> GameRuntime:
 def test_ask_npc_success_records_question_and_answer():
     runtime = build_runtime()
     fake_agent = FakeNPCAgent("我当时只是在走廊巡查。")
-    service = NPCInteractionService(runtime=runtime, npc_agent=fake_agent)
+    service = NPCInteractionService(
+        state_provider=lambda: runtime.state,
+        responder=fake_agent,
+        record_npc_answer=runtime.record_npc_answer,
+        record_question=runtime.record_question
+    )
 
     result = service.ask_npc(
         target_character_id="npc_butler",
@@ -94,13 +99,11 @@ def test_ask_npc_success_records_question_and_answer():
     question = state.question_history[0]
     answer = state.answer_history[0]
 
-    assert result.question_id == question.question_id
-    assert result.answer_id == answer.answer_id
-    assert result.target_character_id == "npc_butler"
-    assert result.player_question == "案发当晚你在哪里？"
-    assert result.npc_answer == "我当时只是在走廊巡查。"
-
+    assert result.question == question.content
+    assert result.npc_answer == answer.content
     assert answer.question_id == question.question_id
+    assert result.target_character_id == "npc_butler"
+
     assert answer.target_character_id == "npc_butler"
     assert answer.content == "我当时只是在走廊巡查。"
 
@@ -108,7 +111,12 @@ def test_ask_npc_success_records_question_and_answer():
 def test_ask_npc_calls_agent_with_state_and_question():
     runtime = build_runtime()
     fake_agent = FakeNPCAgent()
-    service = NPCInteractionService(runtime=runtime, npc_agent=fake_agent)
+    service = NPCInteractionService(
+        state_provider=lambda: runtime.state,
+        responder=fake_agent,
+        record_npc_answer=runtime.record_npc_answer,
+        record_question=runtime.record_question
+    )
 
     service.ask_npc(
         target_character_id="npc_butler",
@@ -121,15 +129,20 @@ def test_ask_npc_calls_agent_with_state_and_question():
 
     assert call["state"] is runtime.state
     assert call["target_character_id"] == "npc_butler"
-    assert call["player_question"] == "案发当晚你在哪里？"
+    assert "案发当晚你在哪里？" in call["player_question"]
 
 
 def test_ask_npc_requires_game_started():
     runtime = GameRuntime(script)
     fake_agent = FakeNPCAgent()
-    service = NPCInteractionService(runtime=runtime, npc_agent=fake_agent)
+    service = NPCInteractionService(
+        state_provider=lambda: runtime.state,
+        responder=fake_agent,
+        record_npc_answer=runtime.record_npc_answer,
+        record_question=runtime.record_question
+    )
 
-    with pytest.raises(RuntimeError, match="Game has not started"):
+    with pytest.raises(RuntimeError, match="runtime.start"):
         service.ask_npc(
             target_character_id="npc_butler",
             question="案发当晚你在哪里？",
@@ -141,29 +154,17 @@ def test_ask_npc_requires_game_started():
 def test_ask_npc_unknown_character_failed():
     runtime = build_runtime()
     fake_agent = FakeNPCAgent()
-    service = NPCInteractionService(runtime=runtime, npc_agent=fake_agent)
+    service = NPCInteractionService(
+        state_provider=lambda: runtime.state,
+        responder=fake_agent,
+        record_npc_answer=runtime.record_npc_answer,
+        record_question=runtime.record_question
+    )
 
     with pytest.raises(ValueError, match="Unknown character_id"):
         service.ask_npc(
             target_character_id="npc_not_exists",
             question="你是谁？",
-        )
-
-    assert len(fake_agent.calls) == 0
-
-
-def test_ask_npc_respects_question_round_limit():
-    runtime = build_runtime()
-    fake_agent = FakeNPCAgent()
-    service = NPCInteractionService(runtime=runtime, npc_agent=fake_agent)
-
-    assert runtime.state is not None
-    runtime.state.current_round = runtime.script.rules.max_question_rounds
-
-    with pytest.raises(ValueError, match="Question round limit exceeded"):
-        service.ask_npc(
-            target_character_id="npc_butler",
-            question="还能继续问吗？",
         )
 
     assert len(fake_agent.calls) == 0
