@@ -1,7 +1,8 @@
 from bootstrap import bootstrap_project
-from stery.clue import ClueSearchService
 
 bootstrap_project()
+
+from stery.clue.clue_search_service import ClueSearchService
 from dotenv import load_dotenv
 import argparse
 from stery.agents import NPCAgent

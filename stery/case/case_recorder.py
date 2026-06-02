@@ -106,4 +106,5 @@ class CaseRecorder:
 
     def _append_record(self, state: GameState, record: CaseRecord) -> CaseRecord:
         state.case_records.append(record)
+        state.touch()
         return record

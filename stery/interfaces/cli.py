@@ -3,8 +3,8 @@ from stery.clue import ClueSearchService
 from stery.npc.npc_interaction_service import NPCInteractionService
 from stery.judge.rule_judge import RuleJudge
 from stery.application.session_recorder import SessionRecorder
-
-
+from stery.case.case_recorder import CaseRecorder
+from stery.domain.enums import CaseActionType
 class MysteryCliApp:
     """
     剧本杀命令行应用。
@@ -35,6 +35,7 @@ class MysteryCliApp:
         self.rule_judge = rule_judge
         self.clue_search_service = clue_search_service
         self.session_recorder = session_recorder or SessionRecorder()
+        self.case_recorder = CaseRecorder()
 
     def run(self) -> None:
         self.runtime.start()
@@ -188,10 +189,25 @@ class MysteryCliApp:
                 print("游戏尚未开始。")
                 return
 
+            self.case_recorder.record_search(
+                state=state,
+                target=keyword,
+            )
+
             result = self.clue_search_service.search(
                 state=state,
                 keyword=keyword,
             )
+
+            for clue in result.newly_unlocked_clues:
+                self.case_recorder.record_discovered_clue(
+                    state=state,
+                    clue_id=clue.id,
+                    clue_name=clue.title,
+                    source_type=CaseActionType.SEARCH.value,
+                    source_id=keyword,
+                    related_question_id=None,
+                )
         except Exception as exc:
             print(f"搜索失败：{exc}")
             return
@@ -231,9 +247,22 @@ class MysteryCliApp:
             return
 
         try:
+            state = self.runtime.state
+            if state is None:
+                print("游戏尚未开始。")
+                return
+
             result = self.npc_interaction_service.ask_npc(
                 target_character_id=target_character_id,
                 question=question,
+            )
+
+            self.case_recorder.record_ask_npc(
+                state=state,
+                npc_id=result.target_character_id,
+                npc_name=self._get_character_name(result.target_character_id),
+                question=result.question,
+                answer=result.npc_answer,
             )
         except Exception as exc:
             print(f"询问失败：{exc}")
@@ -268,6 +297,8 @@ class MysteryCliApp:
                 method=method,
                 key_evidence=key_evidence,
             )
+
+
         except Exception as exc:
             print(f"提交失败：{exc}")
             return False
@@ -277,6 +308,15 @@ class MysteryCliApp:
             return False
 
         result = self.rule_judge.evaluate_final_vote(state.final_vote)
+
+        self.case_recorder.record_submit(
+            state=state,
+            accused_npc_id=suspect_character_id,
+            accused_npc_name=self._get_character_name(suspect_character_id),
+            evidence_clue_ids=key_evidence,
+            reasoning=f"动机：{motive}\n手法：{method}",
+            judge_result="CORRECT" if result.is_correct else "INCORRECT",
+        )
 
         print("\n【推理结果】")
         print(f"是否完全正确：{result.is_correct}")
@@ -477,3 +517,10 @@ class MysteryCliApp:
             return character_id
 
         return f"{character.name}（{character.id}）"
+
+    def _get_character_name(self, character_id: str) -> str:
+        for character in self.runtime.list_characters():
+            if character.id == character_id:
+                return character.name
+
+        return character_id
