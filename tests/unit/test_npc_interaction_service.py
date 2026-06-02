@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from stery.application.game_runtime import GameRuntime
-from stery.application.npc_interaction_service import NPCInteractionService
+from stery.npc.npc_interaction_service import NPCInteractionService
 from stery.domain.state import GameState
 from stery.script_repository import LocalFileScriptRepository
 

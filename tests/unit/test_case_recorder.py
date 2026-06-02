@@ -1,4 +1,4 @@
-from stery.application.case_recorder import CaseRecorder
+from stery.case.case_recorder import CaseRecorder
 from stery.domain.case_record import CaseActionType
 from stery.domain.state import GameState
 

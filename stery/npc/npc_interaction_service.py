@@ -3,7 +3,7 @@ from typing import Protocol
 
 from pydantic import BaseModel
 
-from stery.application.npc_guardrail import NpcGuardrail
+from stery.npc.npc_guardrail import NpcGuardrail
 from stery.domain.state import GameState
 
 

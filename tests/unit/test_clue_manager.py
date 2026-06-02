@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stery.application.clue_manager import ClueManager
+from stery.clue.clue_manager import ClueManager
 from stery.script_repository import LocalFileScriptRepository
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

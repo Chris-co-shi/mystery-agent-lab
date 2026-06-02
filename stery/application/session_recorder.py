@@ -23,7 +23,7 @@ def _build_markdown(payload: dict[str, Any]) -> str:
                         f"- Title: {payload['script_title']}", "", "## Time", "",
                         f"- Started At: {payload['started_at']}", f"- Ended At: {payload['ended_at']}", "",
                         "## Progress", "", f"- Current Phase: {payload['current_phase']}",
-                        f"- Current Round: {payload['current_round']}", f"- Is Finished: {payload['is_finished']}",
+                        f"- Is Finished: {payload['is_finished']}",
                         "", "## Unlocked Clues", ""]
 
     unlocked_clue_ids = payload.get("unlocked_clue_ids") or []
@@ -152,7 +152,6 @@ class SessionRecorder:
             "started_at": self._to_json_value(state.created_at),
             "ended_at": self._to_json_value(state.updated_at),
             "current_phase": self._to_json_value(state.current_phase),
-            "current_round": state.current_round,
             "is_finished": state.is_finished,
             "unlocked_clue_ids": sorted(state.unlocked_clue_ids),
             "question_history": self._to_json_value(state.question_history),

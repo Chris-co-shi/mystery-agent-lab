@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 from stery.agents.npc_agent import NPCAgent
 from stery.application.game_runtime import GameRuntime
-from stery.application.npc_interaction_service import NPCInteractionService
+from stery.npc.npc_interaction_service import NPCInteractionService
 from stery.llm.base import LLMClient
 
 from stery.config.paths import ENV_FILE

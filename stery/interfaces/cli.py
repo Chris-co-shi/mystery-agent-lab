@@ -1,7 +1,7 @@
-from stery.application import ClueSearchService
 from stery.application.game_runtime import GameRuntime
-from stery.application.npc_interaction_service import NPCInteractionService
-from stery.application.rule_judge import RuleJudge
+from stery.clue import ClueSearchService
+from stery.npc.npc_interaction_service import NPCInteractionService
+from stery.judge.rule_judge import RuleJudge
 from stery.application.session_recorder import SessionRecorder
 
 

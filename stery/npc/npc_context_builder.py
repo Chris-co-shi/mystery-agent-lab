@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 
-from stery.application.clue_manager import ClueManager
+from stery.clue import ClueManager
 from stery.domain.models import Character, GameScript, NPCProfile
 from stery.domain.state import GameState
 

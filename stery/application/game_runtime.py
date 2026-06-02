@@ -1,4 +1,4 @@
-from stery.application.clue_manager import ClueManager
+from stery.clue import ClueManager
 from stery.domain.enums import GamePhase
 from stery.domain.models import Character, GameScript
 from stery.domain.state import (
@@ -194,10 +194,3 @@ class GameRuntime:
         for clue_id in clue_ids:
             if clue_id not in existing_clue_ids:
                 raise ValueError(f"Unknown clue_id: {clue_id}")
-
-    # def _ensure_question_round_available(self, state: GameState) -> None:
-    #     if state.current_round >= self.script.rules.max_question_rounds:
-    #         raise ValueError(
-    #             f"Question round limit exceeded: "
-    #             f"{state.current_round}/{self.script.rules.max_question_rounds}"
-    #         )

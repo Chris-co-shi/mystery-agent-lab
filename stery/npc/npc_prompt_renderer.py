@@ -1,4 +1,4 @@
-from stery.application.npc_context_builder import NPCPromptContext
+from stery.npc.npc_context_builder import NPCPromptContext
 
 
 def _format_list(items: list[str]) -> str:

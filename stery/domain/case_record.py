@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from stery.domain.enums import CaseActionType
 
@@ -16,6 +16,8 @@ def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 class CaseRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     id: str = Field(default_factory=lambda: uuid4().hex)
     # 案件操作类型
     action_type: CaseActionType

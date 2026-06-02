@@ -1,15 +1,15 @@
 from bootstrap import bootstrap_project
+from stery.clue import ClueSearchService
 
 bootstrap_project()
 from dotenv import load_dotenv
 import argparse
 from stery.agents import NPCAgent
 from stery.application.game_runtime import GameRuntime
-from stery.application.npc_interaction_service import NPCInteractionService
-from stery.application.rule_judge import RuleJudge
+from stery.npc.npc_interaction_service import NPCInteractionService
+from stery.judge.rule_judge import RuleJudge
 from stery.interfaces.cli import MysteryCliApp
 from stery.llm.base import LLMClient
-from stery.application.clue_search_service import ClueSearchService
 from stery.config.paths import ENV_FILE
 from stery.script_repository import LocalFileScriptRepository, ScriptRepository
 

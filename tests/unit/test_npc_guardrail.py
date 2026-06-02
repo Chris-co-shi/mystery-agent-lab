@@ -1,4 +1,4 @@
-from stery.application.npc_guardrail import NpcAnswerMode, NpcGuardrail
+from stery.npc.npc_guardrail import NpcAnswerMode, NpcGuardrail
 
 
 def test_subjective_accusation_question_should_not_be_blocked():

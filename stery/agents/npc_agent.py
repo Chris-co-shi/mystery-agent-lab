@@ -1,7 +1,7 @@
 from openai.types.chat import ChatCompletionMessageParam
 
-from stery.application.npc_context_builder import NPCContextBuilder
-from stery.application.npc_prompt_renderer import NPCPromptRenderer
+from stery.npc.npc_context_builder import NPCContextBuilder
+from stery.npc.npc_prompt_renderer import NPCPromptRenderer
 from stery.domain.models import GameScript
 from stery.domain.state import GameState
 from stery.llm.base import LLMClient

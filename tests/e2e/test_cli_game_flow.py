@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from stery.application.clue_search_service import ClueSearchService
 from stery.application.game_runtime import GameRuntime
-from stery.application.npc_interaction_service import NPCInteractionService
-from stery.application.rule_judge import RuleJudge
+from stery.clue import ClueSearchService
+from stery.npc.npc_interaction_service import NPCInteractionService
+from stery.judge.rule_judge import RuleJudge
 from stery.domain.state import GameState
 from stery.script_repository import LocalFileScriptRepository
 
