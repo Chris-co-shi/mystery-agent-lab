@@ -1,0 +1,939 @@
+{
+  "id": "neon_tower_silent_chamber_001",
+  "title": "霓虹塔静默舱",
+  "version": "v0.2.0",
+  "genre": "赛博朋克",
+  "difficulty": "MEDIUM_HARD",
+  "estimated_minutes": 60,
+  "background": "2079 年，新海市。巨型脑机企业赫利俄斯神经科技即将发布新一代记忆重塑芯片 Eidolon-9。发布会前夜，项目负责人沈维舟被发现死在霓虹塔第 47 层的静默舱内。静默舱房门从内部完成生物识别闭锁，案发时间段无人进入，舱内无窗，空气循环系统没有外部入侵痕迹。现场看似一次脑机同步事故，也像一间无人能进出的密室。玩家需要通过调查尸体、静默舱、准备区、注入器、药剂柜、门禁终端和相关人员证言，找出真正的凶手、动机、作案手法以及破解密室的关键证据。",
+  "rules": {
+    "max_question_rounds": 10,
+    "allow_free_question": true,
+    "allow_clue_search": true,
+    "final_vote": [
+      "murderer_id",
+      "motive",
+      "method",
+      "key_evidence_ids"
+    ],
+    "scoring": {
+      "murderer_score": 40,
+      "key_evidence_score": 30,
+      "motive_score": 15,
+      "method_score": 15
+    }
+  },
+  "characters": [
+    {
+      "id": "victim_shen_weizhou",
+      "name": "沈维舟",
+      "role": "死者 / Eidolon-9 项目负责人",
+      "is_npc": false,
+      "is_victim": true,
+      "public_profile": "赫利俄斯神经科技技术总监，Eidolon-9 项目的公开负责人。以天才、强势和功利著称，案发前正准备主持内部发布会。",
+      "relationship_to_victim": "本人"
+    },
+    {
+      "id": "npc_qi_manshu",
+      "name": "祁曼殊",
+      "role": "神经药理顾问",
+      "is_npc": true,
+      "is_victim": false,
+      "public_profile": "负责 Eidolon-9 测试阶段的药剂安全评估，专业、冷静，熟悉神经稳定剂和测试辅助药物。",
+      "relationship_to_victim": "项目药理顾问"
+    },
+    {
+      "id": "npc_ling_qiubai",
+      "name": "凌秋白",
+      "role": "安全主管",
+      "is_npc": true,
+      "is_victim": false,
+      "public_profile": "霓虹塔第 47 层安防负责人，掌握门禁、监控和安全校验流程。近期与沈维舟发生过权限冲突。",
+      "relationship_to_victim": "企业安全负责人"
+    },
+    {
+      "id": "npc_lu_chen",
+      "name": "陆沉",
+      "role": "外部数据顾问",
+      "is_npc": true,
+      "is_victim": false,
+      "public_profile": "身份背景复杂的外部数据顾问，案发当晚被发现出现在第 47 层附近。",
+      "relationship_to_victim": "外部合作对象"
+    },
+    {
+      "id": "npc_bai_luo",
+      "name": "白洛",
+      "role": "集团法务 / 死者前妻",
+      "is_npc": true,
+      "is_victim": false,
+      "public_profile": "赫利俄斯集团法务总监，也是沈维舟的前妻。她负责处理 Eidolon-9 的伦理审查和专利归属问题。",
+      "relationship_to_victim": "前妻与法务负责人"
+    },
+    {
+      "id": "npc_zhou_yao",
+      "name": "周遥",
+      "role": "年轻脑机工程师",
+      "is_npc": true,
+      "is_victim": false,
+      "public_profile": "Eidolon-9 诊断模块工程师，曾公开抱怨自己的算法成果被沈维舟夺走署名。",
+      "relationship_to_victim": "下属工程师"
+    },
+    {
+      "id": "npc_yinuo",
+      "name": "伊诺",
+      "role": "记忆备份维护员",
+      "is_npc": true,
+      "is_victim": false,
+      "public_profile": "负责维护企业偶像型 AI 代言人的真人记忆样本。她的姐姐曾参与 Eidolon-9 早期实验。",
+      "relationship_to_victim": "项目受害者家属"
+    }
+  ],
+  "npc_profiles": [
+    {
+      "character_id": "npc_qi_manshu",
+      "private_background": "祁曼殊是 Eidolon-9 药理稳定模型的主要贡献者，但沈维舟准备在发布会后将成果归到自己名下，并把早期伦理事故责任转嫁给她。她担心执业资格、职业生涯和人身自由全部被毁。",
+      "known_facts": [
+        "沈维舟长期使用神经稳定注入器辅助脑机同步测试。",
+        "案发前，准备区药剂流程需要药理顾问复核。",
+        "她知道神经稳定剂与特定抑制剂叠加后会造成延迟性呼吸抑制。",
+        "她知道白洛手中有一份伦理事故调查文件。"
+      ],
+      "secrets": [
+        "她是真正的凶手。",
+        "她案发前进入过第 47 层准备区。",
+        "她替换了沈维舟测试用的神经稳定注入器。",
+        "她从药剂冷藏柜取走过一支神经抑制剂。",
+        "她知道沈维舟准备把早期实验事故责任推给她。"
+      ],
+      "lie_rules": [
+        "如果被问到是否进入准备区，可以说自己只是按流程复核药剂剂量。",
+        "如果被问到神经抑制剂，可以说那是高风险备用药，不会用于正式测试。",
+        "如果被问到沈维舟是否侵占成果，可以承认有争议，但强调自己会通过法务解决。",
+        "如果玩家已经掌握注入器批号异常、准备区托盘残留和药剂缺失记录，可以表现紧张，但不能主动承认杀人。"
+      ],
+      "forbidden_knowledge": [
+        "不能主动说出自己是真凶。",
+        "不能主动说明注入器被她替换。",
+        "不能知道陆沉删除监控的完整原因，除非玩家已经发现相关线索。",
+        "不能知道周遥是否实际篡改了芯片程序。"
+      ],
+      "personality": "理性、克制、专业感强，习惯用技术术语解释问题；被追问药剂细节时会变得防御。",
+      "alibi_claim": "她声称案发时自己在药理观察室整理测试剂量报告，没有进入静默舱。",
+      "possible_motive": "研究成果被侵占，早期伦理事故将被转嫁，职业和人身风险即将爆发。"
+    },
+    {
+      "character_id": "npc_ling_qiubai",
+      "private_background": "凌秋白是霓虹塔安防负责人。沈维舟近期要求削弱人工安全权限，并计划引入自动化安防系统替代他的团队。他对沈维舟不满，但没有实施杀人的关键手段。",
+      "known_facts": [
+        "案发前，静默舱门禁系统进行过一次管理员校验重算。",
+        "案发时间段静默舱没有外部开门记录。",
+        "陆沉案发当晚出现在第 47 层附近。",
+        "沈维舟曾要求他临时降低部分人工安防权限。"
+      ],
+      "secrets": [
+        "他案发前私自保留了一份门禁校验日志。",
+        "他确实修改过静默舱锁定策略，但目的是防止远程接入。",
+        "他担心自己被沈维舟撤换，所以没有第一时间公开所有安全日志。"
+      ],
+      "lie_rules": [
+        "如果被问到门禁校验，可以先说那是例行维护。",
+        "如果被问到与沈维舟的冲突，可以弱化为工作分歧。",
+        "如果被问到是否有能力制造密室，可以承认有权限，但否认自己进入静默舱。"
+      ],
+      "forbidden_knowledge": [
+        "不知道注入器被替换。",
+        "不知道祁曼殊取走了神经抑制剂。",
+        "不知道沈维舟死亡的真实药理机制。"
+      ],
+      "personality": "警惕、强硬、控制欲强，说话像安保报告，容易把怀疑引向陆沉。",
+      "alibi_claim": "案发时他在安全控制室处理系统校验告警。",
+      "possible_motive": "权限被削弱，团队可能被撤换，对沈维舟怀恨。"
+    },
+    {
+      "character_id": "npc_lu_chen",
+      "private_background": "陆沉与沈维舟存在非法记忆数据交易。案发当晚他潜入第 47 层，目的是取走一份数据账本，避免自己被沈维舟拖下水。",
+      "known_facts": [
+        "他知道沈维舟与黑市存在数据交易。",
+        "他案发当晚进入过第 47 层。",
+        "他删除过一段走廊监控。",
+        "他没有药剂柜权限，也不熟悉神经药理流程。"
+      ],
+      "secrets": [
+        "他删除监控是为了掩盖自己进入数据柜区域。",
+        "他和沈维舟有一笔未结清的数据交易。",
+        "他知道沈维舟准备销毁部分非法记忆样本。"
+      ],
+      "lie_rules": [
+        "如果被问到是否来过第 47 层，可以先否认。",
+        "如果被问到监控删除，可以说自己只是保护商业秘密。",
+        "如果玩家发现恢复监控片段，可以承认偷取数据，但坚持没有进入准备区或静默舱。"
+      ],
+      "forbidden_knowledge": [
+        "不知道注入器被替换。",
+        "不知道祁曼殊的药剂计划。",
+        "不知道白洛文件的完整内容。"
+      ],
+      "personality": "油滑、现实、善于谈条件，不愿白白提供信息。",
+      "alibi_claim": "他声称案发时自己在第 47 层外侧通道寻找离开的路径。",
+      "possible_motive": "非法交易纠纷，担心沈维舟出卖自己。"
+    },
+    {
+      "character_id": "npc_bai_luo",
+      "private_background": "白洛是沈维舟的前妻，也是集团法务总监。她掌握一份关于 Eidolon-9 早期伦理事故的调查文件，文件显示沈维舟试图把责任转嫁给祁曼殊。",
+      "known_facts": [
+        "沈维舟准备在发布会后重组项目归属。",
+        "祁曼殊可能被移出项目并承担伦理事故责任。",
+        "周遥的算法署名存在争议。",
+        "伊诺的姐姐是早期实验事故相关人员。"
+      ],
+      "secrets": [
+        "她手中有伦理事故转嫁文件。",
+        "她准备在发布会前阻止项目对外发布。",
+        "她与沈维舟的离婚协议涉及 Eidolon-9 的部分专利收益。"
+      ],
+      "lie_rules": [
+        "如果被问到伦理文件，可以先说是普通合规材料。",
+        "如果被问到专利纠纷，可以承认有争议，但强调不值得杀人。",
+        "如果玩家已发现法务隔离终端线索，可以说明沈维舟准备牺牲祁曼殊。"
+      ],
+      "forbidden_knowledge": [
+        "不知道祁曼殊已经替换注入器。",
+        "不知道药剂冷藏柜缺失的具体药剂。",
+        "不能确定谁杀了沈维舟。"
+      ],
+      "personality": "冷静、锋利、注重证据，回答问题时倾向于法务措辞。",
+      "alibi_claim": "案发时她在法务隔离室准备发布会暂停申请。",
+      "possible_motive": "专利归属、离婚财产纠纷、阻止项目发布。"
+    },
+    {
+      "character_id": "npc_zhou_yao",
+      "private_background": "周遥开发了 Eidolon-9 的部分诊断算法，但沈维舟把算法署名移到了自己名下。周遥案发前检查过主控台日志，却没有接触药剂或注入器。",
+      "known_facts": [
+        "设备日志中存在一段过于稳定的脑波曲线。",
+        "芯片诊断模块没有发现外部代码篡改。",
+        "沈维舟长期压榨年轻工程师的成果。",
+        "祁曼殊对药剂流程有最终复核权。"
+      ],
+      "secrets": [
+        "他案发前曾进入主控台查看日志。",
+        "他保留了一份算法提交记录，证明自己被抢署名。",
+        "他曾想在发布会上公开署名争议。"
+      ],
+      "lie_rules": [
+        "如果被问到是否接触主控台，可以先说只是例行检查。",
+        "如果被问到是否怨恨沈维舟，可以承认不满，但否认杀人。",
+        "如果被问到设备异常，可以指出异常更像药物干预，而不是程序篡改。"
+      ],
+      "forbidden_knowledge": [
+        "不知道注入器被替换。",
+        "不知道祁曼殊取走药剂。",
+        "不能直接判断真凶。"
+      ],
+      "personality": "年轻、焦虑、技术导向强，容易用工程日志解释问题。",
+      "alibi_claim": "案发时他在工程终端区检查发布会演示脚本。",
+      "possible_motive": "算法署名被夺，职业发展受阻。"
+    },
+    {
+      "character_id": "npc_yinuo",
+      "private_background": "伊诺的姐姐曾是 Eidolon-9 早期实验对象，实验后出现严重记忆损伤，其记忆备份被集团封存。沈维舟准备删除相关备份以掩盖实验事故。",
+      "known_facts": [
+        "沈维舟准备清理早期实验数据。",
+        "她的姐姐与 Eidolon-9 伦理事故有关。",
+        "白洛曾调查过早期实验文件。",
+        "陆沉与非法记忆数据交易有关。"
+      ],
+      "secrets": [
+        "她曾试图复制姐姐的记忆备份。",
+        "她案发前与沈维舟发生过激烈争吵。",
+        "她没有接触药剂柜和准备区的权限。"
+      ],
+      "lie_rules": [
+        "如果被问到是否恨沈维舟，可以承认，但强调自己只是想保留姐姐的记忆。",
+        "如果被问到是否进入过第 47 层，可以承认自己去过记忆样本维护区。",
+        "如果被问到陆沉，可以说他可能知道非法数据流向。"
+      ],
+      "forbidden_knowledge": [
+        "不知道注入器被替换。",
+        "不知道祁曼殊具体的药剂手法。",
+        "不知道门禁日志的真实校验含义。"
+      ],
+      "personality": "情绪压抑、敏感、对企业极度不信任，容易把怀疑投向白洛和陆沉。",
+      "alibi_claim": "案发时她在记忆样本维护区查看姐姐的备份状态。",
+      "possible_motive": "姐姐因早期实验受害，死者准备删除相关记忆备份。"
+    }
+  ],
+  "clues": [
+    {
+      "id": "clue_public_locked_chamber",
+      "title": "静默舱密室状态",
+      "content": "沈维舟被发现死在第 47 层静默舱内。房门从内部完成生物识别闭锁，案发时间段没有外部开门记录，舱内无窗，空气循环模块没有显示外部入侵。",
+      "visibility": "PUBLIC",
+      "importance": "MEDIUM",
+      "clue_type": "SCENE_CONTEXT",
+      "related_target_ids": [
+        "target_silent_chamber"
+      ],
+      "reasoning_tags": [
+        "LOCKED_ROOM",
+        "SCENE"
+      ],
+      "search_keywords": [
+        "静默舱",
+        "密室",
+        "内部闭锁",
+        "无人进入"
+      ]
+    },
+    {
+      "id": "clue_public_project_background",
+      "title": "Eidolon-9 发布会背景",
+      "content": "赫利俄斯神经科技原定在当晚发布记忆重塑芯片 Eidolon-9。沈维舟是项目负责人，祁曼殊负责药剂安全评估，周遥负责诊断模块，白洛负责伦理审查和法务流程。",
+      "visibility": "PUBLIC",
+      "importance": "LOW",
+      "clue_type": "BACKGROUND",
+      "related_character_ids": [
+        "victim_shen_weizhou",
+        "npc_qi_manshu",
+        "npc_zhou_yao",
+        "npc_bai_luo"
+      ],
+      "reasoning_tags": [
+        "BACKGROUND",
+        "PROJECT"
+      ],
+      "search_keywords": [
+        "Eidolon-9",
+        "发布会",
+        "项目",
+        "赫利俄斯"
+      ]
+    },
+    {
+      "id": "clue_neck_injection_mark",
+      "title": "尸体颈侧异常针孔",
+      "content": "沈维舟颈侧有一个细小针孔，周围出现轻微皮下淤痕。针孔位置符合神经稳定注入器的使用角度，但局部反应比常规稳定剂更强。",
+      "visibility": "LOCKED",
+      "importance": "HIGH",
+      "clue_type": "PHYSICAL_EVIDENCE",
+      "related_character_ids": [
+        "victim_shen_weizhou"
+      ],
+      "related_target_ids": [
+        "target_body"
+      ],
+      "reasoning_tags": [
+        "METHOD",
+        "INJECTION",
+        "CAUSE_OF_DEATH"
+      ],
+      "is_key_clue": true,
+      "search_keywords": [
+        "尸体",
+        "针孔",
+        "颈侧",
+        "注射",
+        "稳定剂"
+      ]
+    },
+    {
+      "id": "clue_hypoxia_reaction",
+      "title": "缺氧反应与表面死因不符",
+      "content": "尸体嘴唇和指端呈现轻度发绀，符合呼吸抑制后的缺氧表现。单纯脑机同步事故通常不会留下这种稳定的外周缺氧特征。",
+      "visibility": "LOCKED",
+      "importance": "MEDIUM",
+      "clue_type": "MEDICAL_OBSERVATION",
+      "related_character_ids": [
+        "victim_shen_weizhou"
+      ],
+      "related_target_ids": [
+        "target_body"
+      ],
+      "reasoning_tags": [
+        "CAUSE_OF_DEATH",
+        "METHOD"
+      ],
+      "search_keywords": [
+        "缺氧",
+        "发绀",
+        "呼吸抑制",
+        "死因"
+      ]
+    },
+    {
+      "id": "clue_inner_lock_record",
+      "title": "静默舱内部闭锁记录",
+      "content": "房门锁定记录显示，沈维舟进入静默舱后使用本人身份完成内部闭锁。死亡时间段没有外部开门、远程开锁或强制破坏记录。",
+      "visibility": "LOCKED",
+      "importance": "MEDIUM",
+      "clue_type": "ACCESS_LOG",
+      "related_target_ids": [
+        "target_silent_chamber"
+      ],
+      "reasoning_tags": [
+        "LOCKED_ROOM",
+        "ALIBI"
+      ],
+      "search_keywords": [
+        "门锁",
+        "内部闭锁",
+        "开门记录",
+        "生物识别"
+      ]
+    },
+    {
+      "id": "clue_air_cycle_clean",
+      "title": "空气循环无入侵记录",
+      "content": "静默舱空气循环模块没有检测到外部管道开启、压力突变或异常颗粒进入。记录反而说明案发时间段没有人通过通风或维护通道进入舱内。",
+      "visibility": "LOCKED",
+      "importance": "MEDIUM",
+      "clue_type": "SCENE_TRACE",
+      "related_target_ids": [
+        "target_silent_chamber"
+      ],
+      "reasoning_tags": [
+        "LOCKED_ROOM",
+        "RED_HERRING_REFUTE"
+      ],
+      "search_keywords": [
+        "空气循环",
+        "通风",
+        "入侵",
+        "压力"
+      ]
+    },
+    {
+      "id": "clue_injector_batch_mismatch",
+      "title": "注入器批号不一致",
+      "content": "死者手边的空注入器外壳与赫利俄斯医疗耗材规格一致，但批号磨损位置异常。与医疗冷藏柜登记的沈维舟专用注入器批号比对后，发现两者并不一致。",
+      "visibility": "LOCKED",
+      "importance": "HIGH",
+      "clue_type": "PHYSICAL_EVIDENCE",
+      "related_character_ids": [
+        "npc_qi_manshu",
+        "victim_shen_weizhou"
+      ],
+      "related_target_ids": [
+        "target_injector"
+      ],
+      "reasoning_tags": [
+        "METHOD",
+        "INJECTOR",
+        "KEY_EVIDENCE"
+      ],
+      "is_key_clue": true,
+      "search_keywords": [
+        "注入器",
+        "批号",
+        "不一致",
+        "替换",
+        "耗材"
+      ]
+    },
+    {
+      "id": "clue_preparation_tray_residue",
+      "title": "准备区注入器托盘残留",
+      "content": "第 47 层准备区的注入器托盘上有一处新鲜冷凝痕迹和轻微刮痕，位置正对应沈维舟专用注入器的存放槽。痕迹显示该注入器在测试前曾被临时取出或替换。",
+      "visibility": "LOCKED",
+      "importance": "HIGH",
+      "clue_type": "SCENE_TRACE",
+      "related_character_ids": [
+        "npc_qi_manshu",
+        "victim_shen_weizhou"
+      ],
+      "related_target_ids": [
+        "target_preparation_room"
+      ],
+      "reasoning_tags": [
+        "LOCKED_ROOM",
+        "METHOD",
+        "KEY_EVIDENCE"
+      ],
+      "is_key_clue": true,
+      "search_keywords": [
+        "准备区",
+        "托盘",
+        "注入器",
+        "替换",
+        "冷凝痕迹"
+      ]
+    },
+    {
+      "id": "clue_stable_wave_curve",
+      "title": "异常稳定的脑波曲线",
+      "content": "神经同步主控台记录显示，沈维舟死亡前出现一段过于平滑的稳定脑波曲线。周遥指出，这不像程序故障，更像药物先行压制了神经波动。",
+      "visibility": "LOCKED",
+      "importance": "MEDIUM",
+      "clue_type": "DEVICE_LOG",
+      "related_character_ids": [
+        "npc_zhou_yao",
+        "victim_shen_weizhou"
+      ],
+      "related_target_ids": [
+        "target_sync_console"
+      ],
+      "reasoning_tags": [
+        "METHOD",
+        "DEVICE",
+        "RED_HERRING_REFUTE"
+      ],
+      "search_keywords": [
+        "脑波",
+        "稳定曲线",
+        "主控台",
+        "药物干预"
+      ]
+    },
+    {
+      "id": "clue_sedative_missing_record",
+      "title": "药剂冷藏柜缺失记录",
+      "content": "药剂冷藏柜记录显示，一支可造成呼吸中枢抑制的神经抑制剂在案发前被取出。取用记录被标记为剂量复核，但没有对应的正式测试申请。",
+      "visibility": "LOCKED",
+      "importance": "HIGH",
+      "clue_type": "MEDICAL_RECORD",
+      "related_character_ids": [
+        "npc_qi_manshu"
+      ],
+      "related_target_ids": [
+        "target_medical_fridge"
+      ],
+      "reasoning_tags": [
+        "METHOD",
+        "DRUG",
+        "KEY_EVIDENCE"
+      ],
+      "is_key_clue": true,
+      "search_keywords": [
+        "药剂冷藏柜",
+        "神经抑制剂",
+        "缺失",
+        "呼吸抑制",
+        "剂量复核"
+      ]
+    },
+    {
+      "id": "clue_qi_access_preparation",
+      "title": "祁曼殊的准备区访问记录",
+      "content": "准备区门禁终端显示，祁曼殊在沈维舟进入静默舱前 32 分钟进入过注入器准备区，停留时间足够完成药剂复核或耗材替换。",
+      "visibility": "LOCKED",
+      "importance": "HIGH",
+      "clue_type": "ACCESS_LOG",
+      "related_character_ids": [
+        "npc_qi_manshu"
+      ],
+      "related_target_ids": [
+        "target_preparation_access_terminal"
+      ],
+      "reasoning_tags": [
+        "OPPORTUNITY",
+        "KEY_EVIDENCE",
+        "METHOD"
+      ],
+      "is_key_clue": true,
+      "search_keywords": [
+        "祁曼殊",
+        "准备区",
+        "访问记录",
+        "门禁",
+        "注入器"
+      ]
+    },
+    {
+      "id": "clue_admin_recheck_record",
+      "title": "管理员门禁校验记录",
+      "content": "门禁系统在案发前进行过一次管理员校验重算，操作账号属于凌秋白。记录看似可疑，但重算时间早于死亡窗口，且没有生成开门事件。",
+      "visibility": "LOCKED",
+      "importance": "LOW",
+      "clue_type": "ACCESS_LOG",
+      "related_character_ids": [
+        "npc_ling_qiubai"
+      ],
+      "related_target_ids": [
+        "target_security_corridor_terminal"
+      ],
+      "reasoning_tags": [
+        "RED_HERRING",
+        "LOCKED_ROOM"
+      ],
+      "search_keywords": [
+        "凌秋白",
+        "门禁",
+        "校验",
+        "管理员",
+        "重算"
+      ]
+    },
+    {
+      "id": "clue_deleted_footage_restored",
+      "title": "被删除监控片段恢复结果",
+      "content": "恢复的走廊监控片段显示，陆沉案发前进入的是数据柜区域，并未靠近静默舱准备区。删除片段更像是在掩盖非法数据交易，而不是杀人过程。",
+      "visibility": "LOCKED",
+      "importance": "MEDIUM",
+      "clue_type": "VIDEO_RECORD",
+      "related_character_ids": [
+        "npc_lu_chen"
+      ],
+      "related_target_ids": [
+        "target_security_corridor_terminal"
+      ],
+      "reasoning_tags": [
+        "RED_HERRING_REFUTE",
+        "ALIBI"
+      ],
+      "search_keywords": [
+        "陆沉",
+        "监控",
+        "删除",
+        "恢复",
+        "数据柜"
+      ]
+    },
+    {
+      "id": "clue_zhou_algorithm_commit",
+      "title": "周遥的算法提交记录",
+      "content": "工程终端中的提交记录显示，周遥确实拥有被沈维舟夺走署名的诊断算法，但案发当晚诊断模块没有外部代码篡改记录。",
+      "visibility": "LOCKED",
+      "importance": "LOW",
+      "clue_type": "TECHNICAL_RECORD",
+      "related_character_ids": [
+        "npc_zhou_yao",
+        "victim_shen_weizhou"
+      ],
+      "related_target_ids": [
+        "target_sync_console"
+      ],
+      "reasoning_tags": [
+        "RED_HERRING",
+        "RED_HERRING_REFUTE"
+      ],
+      "search_keywords": [
+        "周遥",
+        "算法",
+        "署名",
+        "提交记录",
+        "诊断模块"
+      ]
+    },
+    {
+      "id": "clue_ethics_transfer_file",
+      "title": "伦理事故转嫁文件",
+      "content": "法务隔离终端中保存着一份未提交的内部文件。文件显示，沈维舟准备在发布会后将早期 Eidolon-9 实验事故责任转嫁给祁曼殊，并以此移除她的项目署名和执业资格。",
+      "visibility": "LOCKED",
+      "importance": "HIGH",
+      "clue_type": "DOCUMENT",
+      "related_character_ids": [
+        "npc_qi_manshu",
+        "npc_bai_luo",
+        "victim_shen_weizhou"
+      ],
+      "related_target_ids": [
+        "target_legal_isolation_terminal"
+      ],
+      "reasoning_tags": [
+        "MOTIVE",
+        "KEY_EVIDENCE"
+      ],
+      "is_key_clue": true,
+      "search_keywords": [
+        "伦理事故",
+        "转嫁",
+        "祁曼殊",
+        "执业资格",
+        "署名"
+      ]
+    },
+    {
+      "id": "clue_memory_backup_deletion",
+      "title": "伊诺姐姐的记忆备份删除申请",
+      "content": "记忆样本记录显示，沈维舟曾申请删除一份早期实验对象的记忆备份。申请对象与伊诺的姐姐有关，但删除流程尚未执行。",
+      "visibility": "LOCKED",
+      "importance": "LOW",
+      "clue_type": "DOCUMENT",
+      "related_character_ids": [
+        "npc_yinuo",
+        "victim_shen_weizhou"
+      ],
+      "related_target_ids": [
+        "target_legal_isolation_terminal"
+      ],
+      "reasoning_tags": [
+        "RED_HERRING",
+        "MOTIVE"
+      ],
+      "search_keywords": [
+        "伊诺",
+        "姐姐",
+        "记忆备份",
+        "删除申请",
+        "实验对象"
+      ]
+    }
+  ],
+  "investigation_targets": [
+    {
+      "id": "target_body",
+      "name": "沈维舟的尸体",
+      "type": "BODY",
+      "description": "沈维舟倒在静默舱中央的神经同步椅旁，颈侧靠近接口的位置有细小针孔，嘴唇和指端呈现异常颜色。",
+      "search_keywords": [
+        "尸体",
+        "死者",
+        "针孔",
+        "嘴唇",
+        "缺氧"
+      ],
+      "discoverable_clue_ids": [
+        "clue_neck_injection_mark",
+        "clue_hypoxia_reaction"
+      ]
+    },
+    {
+      "id": "target_silent_chamber",
+      "name": "静默舱",
+      "type": "ROOM",
+      "description": "用于 Eidolon-9 神经同步测试的隔离房间。舱门从内部生物识别闭锁，舱内无窗，没有明显搏斗痕迹，空气循环模块仍保存完整状态记录。",
+      "search_keywords": [
+        "静默舱",
+        "密室",
+        "房门",
+        "内部闭锁",
+        "空气循环"
+      ],
+      "discoverable_clue_ids": [
+        "clue_inner_lock_record",
+        "clue_air_cycle_clean"
+      ]
+    },
+    {
+      "id": "target_preparation_room",
+      "name": "第 47 层准备区",
+      "type": "ROOM",
+      "description": "静默舱测试前的药剂和耗材准备区域。注入器、备用接口和部分测试药剂会在这里完成复核。",
+      "search_keywords": [
+        "准备区",
+        "药剂",
+        "耗材",
+        "注入器",
+        "复核"
+      ],
+      "discoverable_clue_ids": [
+        "clue_preparation_tray_residue"
+      ]
+    },
+    {
+      "id": "target_injector",
+      "name": "死者手边注入器",
+      "type": "ITEM",
+      "description": "一支已经空掉的神经稳定注入器，掉落在死者手边。外观与赫利俄斯标准医疗耗材相同。",
+      "search_keywords": [
+        "注入器",
+        "稳定剂",
+        "批号",
+        "容量",
+        "残留"
+      ],
+      "discoverable_clue_ids": [
+        "clue_injector_batch_mismatch"
+      ]
+    },
+    {
+      "id": "target_sync_console",
+      "name": "神经同步主控台",
+      "type": "ITEM",
+      "description": "记录 Eidolon-9 同步测试参数的主控台，包含脑波曲线、诊断模块状态和工程提交记录。",
+      "search_keywords": [
+        "主控台",
+        "脑波",
+        "日志",
+        "诊断模块",
+        "算法"
+      ],
+      "discoverable_clue_ids": [
+        "clue_stable_wave_curve",
+        "clue_zhou_algorithm_commit"
+      ]
+    },
+    {
+      "id": "target_medical_fridge",
+      "name": "药剂冷藏柜",
+      "type": "ITEM",
+      "description": "准备区内的药剂冷藏柜，用于存放神经稳定剂、备用抑制剂和测试辅助药物。",
+      "search_keywords": [
+        "药剂冷藏柜",
+        "药物",
+        "神经抑制剂",
+        "缺失",
+        "剂量"
+      ],
+      "discoverable_clue_ids": [
+        "clue_sedative_missing_record"
+      ]
+    },
+    {
+      "id": "target_preparation_access_terminal",
+      "name": "准备区门禁终端",
+      "type": "ITEM",
+      "description": "记录准备区出入人员和停留时间的门禁终端，可查看案发前进入准备区的人员记录。",
+      "search_keywords": [
+        "门禁终端",
+        "准备区",
+        "访问记录",
+        "祁曼殊",
+        "停留"
+      ],
+      "discoverable_clue_ids": [
+        "clue_qi_access_preparation"
+      ]
+    },
+    {
+      "id": "target_security_corridor_terminal",
+      "name": "走廊监控终端",
+      "type": "ITEM",
+      "description": "第 47 层走廊监控和门禁校验终端，保存案发前后的安全记录和被删除片段恢复结果。",
+      "search_keywords": [
+        "监控",
+        "走廊",
+        "删除片段",
+        "凌秋白",
+        "陆沉"
+      ],
+      "discoverable_clue_ids": [
+        "clue_admin_recheck_record",
+        "clue_deleted_footage_restored"
+      ]
+    },
+    {
+      "id": "target_legal_isolation_terminal",
+      "name": "法务隔离终端",
+      "type": "ITEM",
+      "description": "白洛负责管理的离线法务终端，保存发布会前的合规材料、伦理调查文件和部分记忆备份处理申请。",
+      "search_keywords": [
+        "法务",
+        "伦理事故",
+        "文件",
+        "白洛",
+        "记忆备份"
+      ],
+      "discoverable_clue_ids": [
+        "clue_ethics_transfer_file",
+        "clue_memory_backup_deletion"
+      ]
+    }
+  ],
+  "truth": {
+    "murderer_id": "npc_qi_manshu",
+    "motive": "祁曼殊的药理稳定模型被沈维舟侵占，沈维舟还准备在发布会后将早期 Eidolon-9 伦理事故责任转嫁给她，移除她的项目署名和执业资格。她面临职业毁灭、刑责风险和被沈维舟继续控制的威胁，因此决定杀死沈维舟并伪装成脑机同步事故。",
+    "method": "祁曼殊在案发前以药剂剂量复核为由进入第 47 层准备区，替换了沈维舟测试时必然会使用的神经稳定注入器。伪装注入器中含有延迟性呼吸中枢抑制剂。沈维舟进入静默舱后自行注射，药剂先制造脑波稳定假象，随后造成呼吸抑制，最终被误判为脑机同步事故。",
+    "key_evidence_ids": [
+      "clue_neck_injection_mark",
+      "clue_injector_batch_mismatch",
+      "clue_preparation_tray_residue",
+      "clue_sedative_missing_record",
+      "clue_qi_access_preparation",
+      "clue_ethics_transfer_file"
+    ],
+    "motive_keywords": [
+      "成果侵占",
+      "替罪羊",
+      "伦理事故",
+      "执业资格",
+      "报复"
+    ],
+    "method_keywords": [
+      "注入器",
+      "替换",
+      "药剂",
+      "呼吸抑制",
+      "下药"
+    ],
+    "locked_room_mechanism": {
+      "apparent_state": "静默舱房门从内部生物识别闭锁，案发时间段无人进入，舱内无窗，空气循环系统没有外部入侵痕迹，死者看似在脑机同步测试中死亡。",
+      "actual_method": "凶手没有在死亡时间进入密室，而是在案发前替换死者必然会使用的神经稳定注入器，让死者进入静默舱后自行注射并触发死亡。",
+      "misdirection": "门禁校验记录、被删除监控片段和设备异常日志让玩家误以为密室来自安防篡改、监控删除或芯片程序故障。",
+      "supporting_clue_ids": [
+        "clue_public_locked_chamber",
+        "clue_inner_lock_record",
+        "clue_air_cycle_clean",
+        "clue_neck_injection_mark",
+        "clue_injector_batch_mismatch",
+        "clue_preparation_tray_residue",
+        "clue_sedative_missing_record",
+        "clue_qi_access_preparation"
+      ]
+    },
+    "explanation": "本案的密室并不是凶手在死亡时间进入又离开静默舱，而是凶手提前布置致命物品。静默舱内部闭锁记录和空气循环记录说明案发时间确实无人进入，反而排除了强行进出密室的可能。尸体颈侧针孔和缺氧反应说明死因与注射药剂有关；注入器批号不一致说明死者手边的注入器被替换；准备区注入器托盘残留说明替换行为发生在静默舱测试前；药剂冷藏柜缺失记录说明存在可造成呼吸抑制的药剂；准备区访问记录证明祁曼殊有接触注入器和药剂的机会；伦理事故转嫁文件证明她有明确杀人动机。凌秋白的门禁校验、陆沉删除监控、周遥算法署名争议和伊诺的记忆备份矛盾都构成误导，但都不能同时解释药剂、注入器替换、准备区访问和动机链。"
+  },
+  "timeline": [
+    {
+      "time": "18:10",
+      "character_id": "npc_bai_luo",
+      "event": "白洛在法务隔离终端整理 Eidolon-9 伦理事故文件，发现沈维舟准备把责任转嫁给祁曼殊。",
+      "is_public": false
+    },
+    {
+      "time": "18:25",
+      "character_id": "npc_qi_manshu",
+      "event": "祁曼殊得知自己将在发布会后被移出项目，并可能承担早期伦理事故责任。",
+      "is_public": false
+    },
+    {
+      "time": "18:40",
+      "character_id": "npc_ling_qiubai",
+      "event": "凌秋白对静默舱门禁系统执行管理员校验重算，目的是阻止外部远程接入。",
+      "is_public": false
+    },
+    {
+      "time": "19:03",
+      "character_id": "npc_qi_manshu",
+      "event": "祁曼殊以药剂剂量复核为由进入第 47 层准备区，并替换沈维舟专用神经稳定注入器。",
+      "is_public": false
+    },
+    {
+      "time": "19:16",
+      "character_id": "npc_lu_chen",
+      "event": "陆沉潜入第 47 层数据柜区域，试图取走与非法记忆数据交易有关的账本。",
+      "is_public": false
+    },
+    {
+      "time": "19:28",
+      "character_id": "npc_zhou_yao",
+      "event": "周遥检查神经同步主控台，确认诊断模块没有被外部代码篡改。",
+      "is_public": false
+    },
+    {
+      "time": "19:35",
+      "character_id": "victim_shen_weizhou",
+      "event": "沈维舟独自进入静默舱，准备进行 Eidolon-9 发布会前的最终神经同步测试。",
+      "is_public": true
+    },
+    {
+      "time": "19:38",
+      "character_id": "victim_shen_weizhou",
+      "event": "沈维舟在静默舱内完成生物识别闭锁，并按照测试流程使用神经稳定注入器。",
+      "is_public": false
+    },
+    {
+      "time": "19:42",
+      "character_id": "victim_shen_weizhou",
+      "event": "主控台记录到一段异常稳定的脑波曲线，随后出现神经同步异常告警。",
+      "is_public": false
+    },
+    {
+      "time": "19:47",
+      "character_id": "victim_shen_weizhou",
+      "event": "沈维舟因延迟性呼吸中枢抑制死亡，现场被系统初步标记为脑机同步事故。",
+      "is_public": false
+    },
+    {
+      "time": "19:55",
+      "character_id": "npc_lu_chen",
+      "event": "陆沉删除一段走廊监控，试图掩盖自己进入数据柜区域的事实。",
+      "is_public": false
+    },
+    {
+      "time": "20:05",
+      "character_id": "npc_ling_qiubai",
+      "event": "凌秋白收到静默舱异常告警，带人打开舱门后发现沈维舟已经死亡。",
+      "is_public": true
+    }
+  ]
+}

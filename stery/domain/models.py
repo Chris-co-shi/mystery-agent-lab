@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 from stery.domain import ClueVisibility, GamePhase
+from stery.judge.scoring import ScoringConfig
 
 
 class ScriptBaseModel(BaseModel):
@@ -31,6 +32,7 @@ class GameRules(ScriptBaseModel):
         min_length=1,
         description="最终投票必填字段，必须至少包含一个字段"
     )
+    scoring: ScoringConfig = ScoringConfig.default()
 
 
 class Character(ScriptBaseModel):
