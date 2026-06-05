@@ -16,15 +16,33 @@ def _validate_clues(script: GameScript, character_ids: set[str]) -> None:
                 )
 
 
-def _validate_truth(
-        script: GameScript,
-        character_ids: set[str],
-        clue_ids: set[str],
-) -> None:
-    if script.truth.id not in character_ids:
+def _validate_truth(script, character_ids: set[str], clue_ids: set[str]) -> None:
+    """
+    校验 truth 中的核心引用。
+
+    V0.2.0 兼容策略：
+    - 新剧本优先使用 truth.murderer_id 表示真凶。
+    - 旧剧本可能仍然用 truth.id 表示真凶。
+    - 因此 validator 必须使用 murderer_id or id，而不是只读 truth.id。
+
+    注意：
+    - truth.key_clue_ids 是代码内部 canonical 字段。
+    - 新生成剧本如果使用 key_evidence_ids，已经在 Truth 模型层通过 alias
+      进入 key_clue_ids。
+    """
+
+    murderer_id = script.truth.murderer_id or script.truth.id
+
+    if not murderer_id:
         raise ValueError(
-            f"Truth references unknown murderer_character_id: "
-            f"{script.truth.id}"
+            "Truth must define murderer_id. "
+            "V0.2.0 scripts should use truth.murderer_id; "
+            "V0.1.x compatibility may fallback to truth.id."
+        )
+
+    if murderer_id not in character_ids:
+        raise ValueError(
+            f"Truth references unknown murderer_id: {murderer_id}"
         )
 
     for clue_id in script.truth.key_clue_ids:
@@ -41,19 +59,22 @@ def _validate_timeline(script: GameScript, character_ids: set[str]) -> None:
                 f"Timeline event references unknown character_id: {event.id}"
             )
 
+def _validate_investigation_targets(script, clue_ids: set[str]) -> None:
+    """
+    校验 investigation_targets 引用的 clue_id 是否存在。
+    """
 
+    for target in script.investigation_targets:
+        for clue_id in target.discoverable_clue_ids:
+            if clue_id not in clue_ids:
+                raise ValueError(
+                    f"InvestigationTarget {target.id} references unknown clue_id: {clue_id}"
+                )
 def validate_script_references(script: GameScript) -> None:
-    """
-    校验剧本内部 ID 引用关系。
-
-    Pydantic 只负责字段类型校验；
-    本函数负责跨对象引用校验。
-    """
     character_ids = {character.id for character in script.characters}
-
     clue_ids = {clue.id for clue in script.clues}
 
     _validate_npc_profiles(script, character_ids)
     _validate_clues(script, character_ids)
     _validate_truth(script, character_ids, clue_ids)
-    _validate_timeline(script, character_ids)
+    _validate_investigation_targets(script, clue_ids)

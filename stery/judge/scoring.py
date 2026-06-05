@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import math
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
 
 
@@ -13,18 +13,18 @@ class ScoringConfig:
     """
     V0.2.0 剧本评分配置。
 
-    这个类只表达“各部分最多多少分”，不负责具体评分逻辑。
+    这个类只表达“每个评分项最多多少分”，不负责具体评分逻辑。
 
     当前 V0.2.0 采用确定性评分：
-    - murderer_score：凶手是否命中
-    - key_evidence_score：关键证据命中比例
-    - motive_score：动机关键词命中比例
-    - method_score：手法关键词命中比例
+    - murderer_score：凶手是否命中。
+    - key_evidence_score：关键证据命中比例。
+    - motive_score：动机关键词命中比例。
+    - method_score：手法关键词命中比例。
 
     注意：
-    1. from_rules() 只负责从 rules.scoring 中读取配置。
-    2. validate() 只返回问题列表，不直接 raise。
-    3. 是否阻断剧本加载，应由后续 ScriptValidator 决定。
+    - from_rules() 负责兼容读取 rules.scoring。
+    - validate() 只返回问题列表，不直接 raise。
+    - 剧本是否非法，应由 ScriptValidator 决定，而不是评分模块决定。
     """
 
     murderer_score: int = 40
@@ -51,17 +51,15 @@ class ScoringConfig:
         """
         从 rules.scoring 中读取评分配置。
 
-        这里做了兼容处理，支持：
+        兼容输入：
         - dict
         - dataclass object
         - pydantic model
         - rules 为 None
         - rules.scoring 缺失
 
-        设计取舍：
-        - 读取失败时使用默认值，而不是抛异常。
-        - 因为 scoring.py 是评分核心，不应该承担“剧本是否非法”的职责。
-        - 后续严格校验应放到 ScriptValidator。
+        读取失败时使用默认值，避免旧剧本直接崩溃。
+        严格校验应交给 ScriptValidator。
         """
 
         if rules is None:
@@ -98,9 +96,7 @@ class ScoringConfig:
 
     @property
     def total_score(self) -> int:
-        """
-        当前评分配置的总分。
-        """
+        """当前评分配置的总分。"""
 
         return (
             self.murderer_score
@@ -115,10 +111,6 @@ class ScoringConfig:
 
         返回：
             list[str]: 配置问题列表。为空表示没有发现问题。
-
-        为什么不直接 raise？
-        - scoring 模块只负责评分，不负责剧本加载失败。
-        - 后续 ScriptValidator 可以调用这个方法，并决定 warning 还是 error。
         """
 
         errors: list[str] = []
@@ -152,9 +144,8 @@ class MurdererScore:
     """
     凶手评分结果。
 
-    这是一个完全命中型评分：
-    - actual_murderer_id == expected_murderer_id，则满分
-    - 否则 0 分
+    内部仍使用 character_id 做确定性匹配。
+    玩家展示层如果需要显示角色名称，应在 CLI / exporter 中转换。
     """
 
     score: int
@@ -165,7 +156,28 @@ class MurdererScore:
     reason: str
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        """
+        转成 dict。
+
+        除了保留旧字段，也额外提供 submitted_ids / expected_ids / matched_ids / missing_ids，
+        方便前端或 CLI 使用统一结构展示评分项。
+        """
+
+        matched_ids = [self.expected_murderer_id] if self.matched and self.expected_murderer_id else []
+        missing_ids = [] if self.matched else ([self.expected_murderer_id] if self.expected_murderer_id else [])
+
+        return {
+            "score": self.score,
+            "max_score": self.max_score,
+            "matched": self.matched,
+            "expected_murderer_id": self.expected_murderer_id,
+            "actual_murderer_id": self.actual_murderer_id,
+            "reason": self.reason,
+            "submitted_ids": [self.actual_murderer_id] if self.actual_murderer_id else [],
+            "expected_ids": [self.expected_murderer_id] if self.expected_murderer_id else [],
+            "matched_ids": matched_ids,
+            "missing_ids": missing_ids,
+        }
 
 
 @dataclass(frozen=True)
@@ -174,18 +186,55 @@ class EvidenceScore:
     关键证据评分结果。
 
     关键证据按命中比例评分：
-    - 命中 2 / 3 条，得到 2/3 的 key_evidence_score
-    - 玩家重复提交同一证据不重复加分
+    - 玩家提交 clue_id。
+    - 剧本标准答案也是 clue_id。
+    - 评分模块只负责 ID 匹配。
+    - clue_id -> 线索标题 的玩家可读化交给 CLI / Markdown exporter。
+
+    这就是方案 B 的核心：
+    - 内部继续用 ID，保证稳定、可测试。
+    - score_breakdown 中保留 matched_ids / missing_ids 等结构化字段。
+    - reason 不再拼接一长串 clue_id。
     """
 
     score: int
     max_score: int
-    matched_clue_ids: list[str]
-    missing_clue_ids: list[str]
-    reason: str
+    submitted_clue_ids: list[str] = field(default_factory=list)
+    expected_clue_ids: list[str] = field(default_factory=list)
+    matched_clue_ids: list[str] = field(default_factory=list)
+    missing_clue_ids: list[str] = field(default_factory=list)
+    reason: str = ""
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        """
+        转成 dict。
+
+        兼容旧字段：
+        - matched_clue_ids
+        - missing_clue_ids
+
+        新增统一结构化字段：
+        - submitted_ids
+        - expected_ids
+        - matched_ids
+        - missing_ids
+
+        CLI 优先读取 matched_ids / missing_ids 并转成线索标题。
+        """
+
+        return {
+            "score": self.score,
+            "max_score": self.max_score,
+            "reason": self.reason,
+            "submitted_clue_ids": list(self.submitted_clue_ids),
+            "expected_clue_ids": list(self.expected_clue_ids),
+            "matched_clue_ids": list(self.matched_clue_ids),
+            "missing_clue_ids": list(self.missing_clue_ids),
+            "submitted_ids": list(self.submitted_clue_ids),
+            "expected_ids": list(self.expected_clue_ids),
+            "matched_ids": list(self.matched_clue_ids),
+            "missing_ids": list(self.missing_clue_ids),
+        }
 
 
 @dataclass(frozen=True)
@@ -201,12 +250,20 @@ class KeywordScore:
 
     score: int
     max_score: int
-    matched_keywords: list[str]
-    missing_keywords: list[str]
-    reason: str
+    expected_keywords: list[str] = field(default_factory=list)
+    matched_keywords: list[str] = field(default_factory=list)
+    missing_keywords: list[str] = field(default_factory=list)
+    reason: str = ""
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "score": self.score,
+            "max_score": self.max_score,
+            "reason": self.reason,
+            "expected_keywords": list(self.expected_keywords),
+            "matched_keywords": list(self.matched_keywords),
+            "missing_keywords": list(self.missing_keywords),
+        }
 
 
 @dataclass(frozen=True)
@@ -214,14 +271,11 @@ class ScoreBreakdown:
     """
     最终评分拆解。
 
-    这个对象是 V0.2.0 的关键产物：
-    它不只告诉玩家“得了多少分”，还说明每一部分为什么得分或扣分。
-
-    后续用途：
-    - /submit 展示评分
-    - /review 回放最终提交
-    - JSON / Markdown 导出
-    - 未来 LLMJudge / HostJudge 对照使用
+    这个对象是 RuleJudge 的结构化评分结果：
+    - murderer：凶手评分。
+    - key_evidence：关键证据评分。
+    - motive：动机关键词评分。
+    - method：手法关键词评分。
     """
 
     murderer: MurdererScore
@@ -231,9 +285,7 @@ class ScoreBreakdown:
 
     @property
     def total_score(self) -> int:
-        """
-        实际得分。
-        """
+        """实际得分。"""
 
         return (
             self.murderer.score
@@ -247,8 +299,7 @@ class ScoreBreakdown:
         """
         满分。
 
-        正常情况下应该是 100，但这里不硬编码。
-        因为后续允许剧本自定义评分总分。
+        正常情况下应该是 100，但这里不硬编码，允许剧本自定义评分总分。
         """
 
         return (
@@ -259,14 +310,6 @@ class ScoreBreakdown:
         )
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        转为 dict，便于：
-        - FinalVoteEvaluation 持久化
-        - JSON 导出
-        - Markdown 渲染
-        - 测试断言
-        """
-
         return {
             "murderer": self.murderer.to_dict(),
             "key_evidence": self.key_evidence.to_dict(),
@@ -278,108 +321,114 @@ class ScoreBreakdown:
 
 
 def score_murderer(
-    *,
-    actual_murderer_id: str,
-    expected_murderer_id: str,
-    max_score: int,
+        *,
+        actual_murderer_id: str | None,
+        expected_murderer_id: str | None,
+        max_score: int,
 ) -> MurdererScore:
     """
-    计算凶手得分。
+    凶手评分。
 
-    参数：
-        actual_murderer_id:
-            玩家提交的凶手 ID。
-
-        expected_murderer_id:
-            剧本 truth 中配置的正确凶手 ID。
-
-        max_score:
-            凶手判断满分。
-
-    返回：
-        MurdererScore
+    凶手仍然使用 character_id 做确定性匹配。
+    玩家界面是否显示角色名称，由 CLI 决定。
     """
 
-    matched = actual_murderer_id == expected_murderer_id
+    actual_id = (actual_murderer_id or "").strip()
+    expected_id = (expected_murderer_id or "").strip()
+
+    matched = bool(actual_id and expected_id and actual_id == expected_id)
 
     return MurdererScore(
         score=max_score if matched else 0,
         max_score=max_score,
         matched=matched,
-        expected_murderer_id=expected_murderer_id,
-        actual_murderer_id=actual_murderer_id,
-        reason=(
-            f"命中正确凶手：{expected_murderer_id}。"
-            if matched
-            else f"凶手不匹配，提交：{actual_murderer_id}，正确：{expected_murderer_id}。"
-        ),
+        expected_murderer_id=expected_id,
+        actual_murderer_id=actual_id,
+        reason="命中正确凶手。" if matched else "未命中正确凶手。",
     )
 
 
 def score_key_evidence(
-    *,
-    actual_clue_ids: list[str],
-    expected_clue_ids: list[str],
-    max_score: int,
+        *,
+        actual_clue_ids: list[str] | tuple[str, ...] | None,
+        expected_clue_ids: list[str] | tuple[str, ...] | None,
+        max_score: int,
 ) -> EvidenceScore:
     """
-    计算关键证据得分。
+    关键证据评分。
 
-    评分规则：
-    - 以 expected_clue_ids 为标准答案集合。
-    - 玩家提交的 actual_clue_ids 命中多少，就按比例给分。
-    - 玩家重复提交同一 clue_id，不重复加分。
-    - matched_clue_ids / missing_clue_ids 按 expected_clue_ids 顺序返回。
+    内部规则：
+    - actual_clue_ids：玩家提交的关键证据 clue_id。
+    - expected_clue_ids：truth.key_clue_ids / truth.key_evidence_ids。
+    - 分数按命中比例计算。
+    - 结果保留 matched_clue_ids / missing_clue_ids 和 matched_ids / missing_ids。
 
-    为什么按 expected_clue_ids 顺序？
-    - 剧本作者在 truth.key_evidence_ids 中的顺序通常更符合推理展示顺序。
-    - sorted() 虽然稳定，但会破坏作者定义的语义顺序。
+    重要：
+    - reason 只描述数量，不拼接 clue_id。
+    - clue_id 只放在结构化字段中。
     """
 
-    actual_unique = _unique_preserve_order(actual_clue_ids or [])
-    expected_unique = _unique_preserve_order(expected_clue_ids or [])
+    submitted_ids = _unique_preserve_order(actual_clue_ids)
+    expected_ids = _unique_preserve_order(expected_clue_ids)
 
-    if not expected_unique:
+    if max_score <= 0:
         return EvidenceScore(
             score=0,
             max_score=max_score,
+            submitted_clue_ids=submitted_ids,
+            expected_clue_ids=expected_ids,
             matched_clue_ids=[],
-            missing_clue_ids=[],
-            reason="剧本未配置关键证据，关键证据不得分。",
+            missing_clue_ids=expected_ids,
+            reason="关键证据评分项未启用。",
         )
 
-    actual_set = set(actual_unique)
+    if not expected_ids:
+        return EvidenceScore(
+            score=max_score,
+            max_score=max_score,
+            submitted_clue_ids=submitted_ids,
+            expected_clue_ids=[],
+            matched_clue_ids=[],
+            missing_clue_ids=[],
+            reason="剧本未配置关键证据，默认给满分。",
+        )
 
-    matched_clue_ids = [
-        clue_id for clue_id in expected_unique if clue_id in actual_set
-    ]
-    missing_clue_ids = [
-        clue_id for clue_id in expected_unique if clue_id not in actual_set
+    submitted_set = set(submitted_ids)
+
+    matched_ids = [
+        clue_id
+        for clue_id in expected_ids
+        if clue_id in submitted_set
     ]
 
-    raw_score = len(matched_clue_ids) / len(expected_unique) * max_score
-    score = _round_half_up(raw_score)
+    missing_ids = [
+        clue_id
+        for clue_id in expected_ids
+        if clue_id not in submitted_set
+    ]
+
+    score = _round_half_up(
+        max_score * len(matched_ids) / len(expected_ids)
+    )
 
     return EvidenceScore(
         score=score,
         max_score=max_score,
-        matched_clue_ids=matched_clue_ids,
-        missing_clue_ids=missing_clue_ids,
-        reason=(
-            f"关键证据命中 {len(matched_clue_ids)}/{len(expected_unique)} 条："
-            f"命中「{_join_or_none(matched_clue_ids)}」，"
-            f"缺失「{_join_or_none(missing_clue_ids)}」。"
-        ),
+        submitted_clue_ids=submitted_ids,
+        expected_clue_ids=expected_ids,
+        matched_clue_ids=matched_ids,
+        missing_clue_ids=missing_ids,
+        reason=f"关键证据命中 {len(matched_ids)}/{len(expected_ids)} 条。",
     )
 
 
 def score_keywords(
-    *,
-    actual_text: str,
-    expected_keywords: list[str],
-    max_score: int,
-    label: str,
-    fallback_expected_text: str | None = None,
+        *,
+        actual_text: str,
+        expected_keywords: list[str] | tuple[str, ...] | None,
+        max_score: int,
+        label: str,
+        fallback_expected_text: str | None = None,
 ) -> KeywordScore:
     """
     计算动机 / 手法关键词得分。
@@ -390,24 +439,26 @@ def score_keywords(
     - 命中比例 = 命中关键词数量 / 标准关键词数量。
     - 最终得分 = 命中比例 * max_score。
 
-    示例：
-        expected_keywords = ["镇静剂", "红酒", "投药"]
-        actual_text = "凶手把镇静剂混入红酒"
-
-        命中 2/3，若 max_score = 15，则得 10 分。
-
-    为什么不用 LLM 判断？
-    - V0.2.0 要保持确定性。
-    - 先解决 RuleJudge 写死评分和手法不参与评分的问题。
-    - LLMJudge 留到后续版本。
+    注意：
+    - 关键词本身是玩家可读文本，因此可以展示。
+    - reason 只描述数量，命中/缺失明细放结构化字段中。
     """
 
     normalized_actual = _normalize_text(actual_text)
 
-    # 去掉空关键词，并保留剧本配置顺序。
     keywords = _unique_preserve_order(
         [keyword for keyword in (expected_keywords or []) if keyword and keyword.strip()]
     )
+
+    if max_score <= 0:
+        return KeywordScore(
+            score=0,
+            max_score=max_score,
+            expected_keywords=keywords,
+            matched_keywords=[],
+            missing_keywords=keywords,
+            reason=f"{label}评分项未启用。",
+        )
 
     if not keywords:
         return _score_with_fallback_text(
@@ -428,40 +479,36 @@ def score_keywords(
         else:
             missing_keywords.append(keyword)
 
-    raw_score = len(matched_keywords) / len(keywords) * max_score
-    score = _round_half_up(raw_score)
+    score = _round_half_up(
+        max_score * len(matched_keywords) / len(keywords)
+    )
 
     return KeywordScore(
         score=score,
         max_score=max_score,
+        expected_keywords=keywords,
         matched_keywords=matched_keywords,
         missing_keywords=missing_keywords,
-        reason=(
-            f"{label}命中 {len(matched_keywords)}/{len(keywords)}："
-            f"命中「{_join_or_none(matched_keywords)}」，"
-            f"缺失「{_join_or_none(missing_keywords)}」。"
-        ),
+        reason=f"{label}命中 {len(matched_keywords)}/{len(keywords)}。",
     )
 
 
 def build_score_breakdown(
-    *,
-    scoring: ScoringConfig,
-    actual_murderer_id: str,
-    expected_murderer_id: str,
-    actual_key_evidence_ids: list[str],
-    expected_key_evidence_ids: list[str],
-    actual_motive: str,
-    motive_keywords: list[str],
-    actual_method: str,
-    method_keywords: list[str],
-    expected_motive: str = "",
-    expected_method: str = "",
+        *,
+        scoring: ScoringConfig,
+        actual_murderer_id: str,
+        expected_murderer_id: str,
+        actual_key_evidence_ids: list[str],
+        expected_key_evidence_ids: list[str],
+        actual_motive: str,
+        motive_keywords: list[str],
+        actual_method: str,
+        method_keywords: list[str],
+        expected_motive: str = "",
+        expected_method: str = "",
 ) -> ScoreBreakdown:
     """
     构建完整评分拆解。
-
-    这是 RuleJudge 后续最应该调用的入口。
 
     输入来自：
     - scoring: script.rules.scoring
@@ -470,6 +517,9 @@ def build_score_breakdown(
 
     输出：
     - ScoreBreakdown
+
+    这里不做任何玩家可读化转换，例如 clue_id -> clue.title。
+    这些转换属于 CLI / exporter 的职责。
     """
 
     murderer_score = score_murderer(
@@ -509,11 +559,11 @@ def build_score_breakdown(
 
 
 def _score_with_fallback_text(
-    *,
-    normalized_actual: str,
-    fallback_expected_text: str | None,
-    max_score: int,
-    label: str,
+        *,
+        normalized_actual: str,
+        fallback_expected_text: str | None,
+        max_score: int,
+        label: str,
 ) -> KeywordScore:
     """
     旧剧本兼容逻辑。
@@ -537,6 +587,7 @@ def _score_with_fallback_text(
         return KeywordScore(
             score=max_score if matched else 0,
             max_score=max_score,
+            expected_keywords=[fallback_text],
             matched_keywords=[fallback_text] if matched else [],
             missing_keywords=[] if matched else [fallback_text],
             reason=(
@@ -549,6 +600,7 @@ def _score_with_fallback_text(
     return KeywordScore(
         score=0,
         max_score=max_score,
+        expected_keywords=[],
         matched_keywords=[],
         missing_keywords=[],
         reason=f"剧本未配置 {label}，该项不得分。",
@@ -557,17 +609,19 @@ def _score_with_fallback_text(
 
 def _round_half_up(value: float) -> int:
     """
-    常规四舍五入。
+    四舍五入，避免 Python round 的 bankers rounding 行为。
 
-    Python 内置 round() 使用银行家舍入：
-        round(2.5) == 2
-
-    对评分系统来说，这不符合直觉。
-    所以这里使用：
-        floor(value + 0.5)
+    例如：
+    - round(2.5) 在 Python 中可能得到 2。
+    - 这里固定得到 3。
     """
 
-    return math.floor(value + 0.5)
+    return int(
+        Decimal(str(value)).quantize(
+            Decimal("1"),
+            rounding=ROUND_HALF_UP,
+        )
+    )
 
 
 def _normalize_text(text: str | None) -> str:
@@ -584,8 +638,6 @@ def _normalize_text(text: str | None) -> str:
     - 繁简转换
     - 语义理解
     - LLM 判断
-
-    这些都留给后续版本。
     """
 
     if text is None:
@@ -594,32 +646,28 @@ def _normalize_text(text: str | None) -> str:
     return re.sub(r"\s+", "", str(text).strip().lower())
 
 
-def _join_or_none(values: list[str]) -> str:
+def _unique_preserve_order(items: list[str] | tuple[str, ...] | None) -> list[str]:
     """
-    用于生成 reason 文本。
+    去重但保留顺序。
 
-    空列表展示为“无”，避免输出空字符串。
-    """
-
-    if not values:
-        return "无"
-
-    return "、".join(values)
-
-
-def _unique_preserve_order(values: list[str]) -> list[str]:
-    """
-    去重并保留原始顺序。
-
-    为什么不用 set？
-    - set 会丢失顺序。
-    - 评分展示时，顺序会影响玩家理解。
+    用途：
+    - 玩家可能重复提交同一个 clue_id。
+    - 剧本 truth.key_evidence_ids 也可能误配置重复。
+    - 评分时应避免重复项影响分数。
     """
 
-    seen: set[str] = set()
+    if not items:
+        return []
+
     result: list[str] = []
+    seen: set[str] = set()
 
-    for value in values:
+    for item in items:
+        value = str(item).strip()
+
+        if not value:
+            continue
+
         if value in seen:
             continue
 
@@ -632,9 +680,6 @@ def _unique_preserve_order(values: list[str]) -> list[str]:
 def _read_field(obj: Any, field_name: str, default: Any = None) -> Any:
     """
     兼容读取 dict / object 字段。
-
-    这个函数暂时放在 scoring.py 内部。
-    后续如果多个模块都需要，再考虑抽到公共工具。
     """
 
     if obj is None:
@@ -651,10 +696,6 @@ def _read_int_field(obj: Any, field_name: str, default: int) -> int:
     读取整数字段。
 
     如果字段缺失或无法转换为 int，则返回默认值。
-
-    注意：
-    这里不抛异常，是为了兼容旧剧本。
-    严格校验留给 ScriptValidator。
     """
 
     value = _read_field(obj, field_name, default)

@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, ConfigDict
@@ -15,17 +16,23 @@ def utc_now() -> datetime:
     """生成 UTC 时间。"""
     return datetime.now(timezone.utc)
 
-class CaseRecord(BaseModel):
+
+class CaseRecordBaseModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    id: str = Field(default_factory=lambda: uuid4().hex)
-    # 案件操作类型
-    action_type: CaseActionType
-    # 标题
-    title: str
-    # 概括
-    summary: str
-    # 创建时间
-    created_at: datetime = Field(default_factory=utc_now)
-    metadata: dict = Field(default_factory=dict)
 
+class CaseRecord(CaseRecordBaseModel):
+    """
+    玩家案件记录。
+
+    CaseRecord 是玩家行为和调查发现的统一记录。
+    它不是剧本静态数据，而是一局游戏运行过程中的记忆。
+    """
+    record_id: str = Field(default_factory=lambda: uuid4().hex)
+    action_type: CaseActionType
+    title: str
+    summary: str
+    # 结构化扩展字段。
+    # 用于保存调查对象、线索 ID、NPC ID 等机器可读信息。
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=utc_now)
