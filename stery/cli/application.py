@@ -1,7 +1,7 @@
 from stery.application.game_runtime import GameRuntime
 from stery.case.case_notebook_service import CaseNotebookService
 from stery.case.known_info_search_service import KnownInfoSearchService
-from stery.cli.ask_flow import  AskFlow
+from stery.cli.ask_flow import AskFlow
 from stery.cli.submit_flow import SubmitFlow
 from stery.clue import ClueSearchService
 from stery.investigation.investigation_service import InvestigationService
@@ -23,22 +23,6 @@ from stery.cli.review_presenter import (
     _normalize_action_type,
     _show_clue_id_list,
 )
-from stery.cli.selectors import (
-    _resolve_character_id,
-)
-
-def _part_get(part, key: str, default=None):
-    """
-    兼容读取 dict / object 两种评分项结构。
-    """
-
-    if part is None:
-        return default
-
-    if isinstance(part, dict):
-        return part.get(key, default)
-
-    return getattr(part, key, default)
 
 
 class Application:
@@ -483,122 +467,3 @@ class Application:
 
             if judge_result:
                 print(f"   判定结果：{judge_result}")
-
-    def _get_character_name(self, character_id: str) -> str:
-        for character in self.runtime.list_characters():
-            if character.id == character_id:
-                return character.name
-
-        return character_id
-
-    def _is_victim_character(self, character) -> bool:
-        """
-        判断角色是否为受害者 / 死者。
-
-        优先使用模型字段 is_victim。
-        同时兼容旧剧本：有些 Character 可能还没有 is_victim 字段，
-        但 role 文案中包含“死者”。CLI 层只做保守过滤，避免把死者展示为可询问对象。
-        """
-
-        if getattr(character, "is_victim", False):
-            return True
-
-        role = str(getattr(character, "role", ""))
-        return "死者" in role or "受害者" in role
-
-    def _get_npc_profile_character_ids(self) -> set[str]:
-        """
-        从 GameScript.npc_profiles 中提取真正有 NPC Profile 的 character_id。
-
-        /ask 的服务层依赖 npc_profile：
-        - 有 npc_profile：可以问。
-        - 没有 npc_profile：不能问，否则会出现 NPC profile not found。
-
-        这里做了字段兼容：
-        - 标准字段优先：character_id。
-        - 兼容可能的旧字段：npc_id / id。
-
-        注意：
-        - 这个方法只返回 ID，不暴露 profile 里的秘密字段。
-        - 如果某个 fallback 字段不是 character_id，后续和 characters 对不上，也不会被展示。
-        """
-
-        profiles = getattr(self.runtime.script, "npc_profiles", None) or []
-        character_ids: set[str] = set()
-
-        for profile in profiles:
-            for field_name in ("character_id", "npc_id", "id"):
-                value = getattr(profile, field_name, None)
-
-                if isinstance(value, str) and value.strip():
-                    character_ids.add(value.strip())
-
-        return character_ids
-
-    def _prompt_suspect_character_id(self) -> str | None:
-        """
-        让玩家选择最终怀疑的凶手。
-
-        支持输入：
-        - 编号：1
-        - 角色名：祁曼殊
-        - 角色 ID：npc_qi_manshu
-
-        当前默认只展示 NPC 作为嫌疑人候选。
-        死者或非 NPC 角色通常不作为最终凶手提交候选。
-        """
-
-        candidates = self._get_suspect_candidates()
-
-        if not candidates:
-            print("当前没有可提交的嫌疑人。")
-            return None
-
-        print("\n【嫌疑人列表】")
-
-        for index, character in enumerate(candidates, start=1):
-            print(f"{index}. {character.name}（{character.role}）")
-            print(f"   简介：{character.public_profile}")
-            print(f"   ID：{character.id}")
-
-        raw = input("\n请输入你认为的凶手编号、姓名或 ID：").strip()
-
-        if not raw:
-            print("凶手不能为空。")
-            return None
-
-        return _resolve_character_id(
-            raw=raw,
-            candidates=candidates,
-        )
-
-    def _get_suspect_candidates(self):
-        """
-        获取可提交凶手候选。
-
-        当前策略：
-        - 优先展示 is_npc=True 的角色。
-        - 排除 is_victim=True 的角色。
-        - 如果没有 NPC，则退回展示所有非受害者角色。
-
-        这样既适配当前剧本，也避免普通玩家把死者作为凶手候选。
-        """
-
-        characters = self.runtime.list_characters()
-
-        candidates = [
-            character
-            for character in characters
-            if getattr(character, "is_npc", False)
-               and not getattr(character, "is_victim", False)
-        ]
-
-        if candidates:
-            return candidates
-
-        return [
-            character
-            for character in characters
-            if not getattr(character, "is_victim", False)
-        ]
-
