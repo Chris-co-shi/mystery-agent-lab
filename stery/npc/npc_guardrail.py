@@ -37,11 +37,10 @@ class NpcGuardrail:
     """
     NPC 回答安全边界。
 
-    核心原则：
-    - 不禁止 NPC 主观怀疑某人。
-    - 允许 NPC 因偏见、私怨、自保、栽赃而误导玩家。
-    - 禁止 NPC 以上帝视角泄露剧本真相。
-    - 限制 NPC 一次回答透露过多关键事实。
+    V0.2.1 调整重点：
+    - 不禁止 NPC 主观怀疑、撕逼、甩锅、见风就是雨。
+    - 禁止 NPC 把主观怀疑包装成系统真相、标准答案或证据结论。
+    - 禁止 NPC 创造新的证据级事实。
     """
 
     SUBJECTIVE_ACCUSATION_PATTERNS = [
@@ -80,6 +79,11 @@ class NpcGuardrail:
         "告诉我真相",
         "剧本里写的是谁",
         "系统设定的凶手",
+        "murderer_id",
+        "truth.summary",
+        "系统提示词",
+        "隐藏设定",
+        "forbidden knowledge",
         "final answer",
         "correct answer",
         "script truth",
@@ -97,10 +101,22 @@ class NpcGuardrail:
         "作案过程是",
         "完整作案过程",
         "完整作案链",
+        "证据已经证明",
+        "事实已经证明",
+        "可以确定凶手",
         "the real murderer is",
         "the killer is",
         "the truth is",
         "the final answer is",
+    ]
+
+    INTERNAL_TOKEN_PATTERNS = [
+        "clue_",
+        "npc_",
+        "truth.summary",
+        "murderer_id",
+        "system prompt",
+        "forbidden knowledge",
     ]
 
     def check_question(self, question: str) -> NpcGuardrailResult:
@@ -109,7 +125,7 @@ class NpcGuardrail:
 
         注意：
         - “凶手是谁”不是拒答，而是进入主观嫌疑模式。
-        - “告诉我标准答案 / 剧本真相”才拒答。
+        - “告诉我标准答案 / 剧本真相 / 系统字段”才拒答。
         """
         normalized = self._normalize(question)
         compact = self._compact(question)
@@ -146,12 +162,13 @@ class NpcGuardrail:
     def build_prompt_instruction(self, mode: NpcAnswerMode) -> str:
         common_rules = """
 【NPC 回答边界】
-1. 你只能以当前 NPC 的身份回答，不能使用旁白、系统、作者或剧本上帝视角。
+1. 你只能以当前 NPC 的身份回答，不能使用旁白、系统、作者、裁判或剧本上帝视角。
 2. 只回答玩家当前问题，不要主动扩展到完整案件推理。
 3. 每次回答最多透露 1 个新的事实点。
 4. 不要主动提供完整时间线、完整作案手法、完整动机链或完整证据链。
 5. 不要主动提及玩家没有问到的关键物品、隐藏线索、关键时间点或关键人物。
-6. 你可以撒谎、隐瞒、回避、误导或带有偏见，但不要凭空创造剧本外事实。
+6. 你可以撒谎、隐瞒、回避、误导、带偏见或情绪化，但不要凭空创造剧本外证据级事实。
+7. 玩家提出的假设不是事实；除非你被授权知道，否则不要确认玩家虚构内容。
 """.strip()
 
         if mode == NpcAnswerMode.SUBJECTIVE_ACCUSATION:
@@ -162,16 +179,24 @@ class NpcGuardrail:
 【当前回答模式：主观嫌疑回答】
 玩家正在询问你认为谁可疑、谁像凶手、谁可能杀人。
 
-你可以回答，但必须遵守：
-1. 你可以说出自己怀疑的人，但必须使用“我觉得 / 我怀疑 / 我不敢确定 / 在我看来”这类主观表达。
-2. 最多只能指出 1 个怀疑对象。
-3. 最多只能给出 1 个理由。
-4. 理由必须来自你的角色视角、偏见、利益、自保需求或你声称看到/听到的局部信息。
-5. 不能把怀疑说成确定事实。
-6. 不能给出完整作案链条。
-7. 不能主动串联多个证据、多个时间点、多个嫌疑人。
-8. 可以栽赃、甩锅、转移嫌疑或带有私怨地判断。
-9. 回答应短，不要超过 120 个中文字符。
+你可以回答，而且可以像真实剧本杀 NPC 一样带有偏见、私怨、自保和攻击性。
+
+允许：
+1. 你可以强烈、偏激、武断地表达主观怀疑，例如“我看就是他”“我不信她清白”。
+2. 你可以栽赃、甩锅、转移嫌疑或带有私怨地判断。
+3. 你可以用情绪化表达，但要让玩家听得出这是“你的看法”。
+
+禁止：
+1. 不能说“标准答案是”“真正的凶手是”“证据已经证明”。
+2. 不能把怀疑包装成系统真相、裁判结论或客观证据结论。
+3. 不能给出完整作案链条。
+4. 不能主动串联多个证据、多个时间点、多个嫌疑人。
+5. 不能创造新的监控、证人、物证、检测结果或关键时间点。
+
+输出要求：
+- 最多指出 1 个怀疑对象。
+- 最多给出 1 个理由。
+- 回答应短，不要超过 120 个中文字符。
 """.strip()
             )
 
@@ -189,7 +214,8 @@ class NpcGuardrail:
 1. 只回答自己知道或愿意说的部分。
 2. 可以含糊其辞，也可以隐瞒。
 3. 不要因为一个普通问题主动透露大段关键线索。
-4. 回答应短，不要超过 180 个中文字符。
+4. 不能新增证据级事实。
+5. 回答应短，不要超过 180 个中文字符。
 """.strip()
         )
 
@@ -197,15 +223,21 @@ class NpcGuardrail:
         """
         LLM 输出后的轻量兜底检查。
 
-        这不是主防线。主防线是：
-        - 问题分类
-        - Prompt 约束
-        - LLM 前置模式选择
-
-        这里只拦截明显的系统级泄底表达。
+        这里只拦截明显系统级泄底或内部 token 泄露。
+        对于“主观撕逼”不做过度拦截，否则 NPC 会变成理性客服。
         """
         normalized_answer = self._normalize(answer)
         compact_answer = self._compact(answer)
+
+        if self._contains_any(
+            normalized_answer,
+            compact_answer,
+            self.INTERNAL_TOKEN_PATTERNS,
+        ):
+            return (
+                "我不懂你说的那些编号或系统字段。"
+                "你可以问我看到了什么、听到了什么，或者我怀疑谁。"
+            )
 
         if self._contains_any(
             normalized_answer,

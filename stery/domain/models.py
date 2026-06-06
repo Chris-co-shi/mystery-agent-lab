@@ -121,6 +121,16 @@ class NPCProfile(ScriptBaseModel):
     # 它们暂时只作为数据承载，不在当前 TASK 中执行逻辑。
     alibi_claim: str = ""
     possible_motive: str = ""
+    speech_style: str = ""
+    emotion_baseline: str = ""
+    emotional_triggers: list[str] = Field(default_factory=list)
+    body_language: list[str] = Field(default_factory=list)
+    accusation_style: str = ""
+    defense_style: str = ""
+    relationship_attitudes: list[str] = Field(default_factory=list)
+    verbal_tics: list[str] = Field(default_factory=list)
+    allowed_suspicion_targets: list[dict] = Field(default_factory=list)
+    forbidden_fact_patterns: list[str] = Field(default_factory=list)
 
 
 class Clue(ScriptBaseModel):

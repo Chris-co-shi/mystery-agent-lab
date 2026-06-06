@@ -220,6 +220,7 @@ NPC 数量：4～6 个
 5. relationships 不是 V0.2.0 必填运行字段，不要作为核心字段输出。
 6. characters 只放玩家可见信息。
 7. npc_profiles 放私有信息、秘密、撒谎规则、禁知信息、性格、不在场声明、可能动机。
+8. 如果是 V0.2.1 NPC 可信化剧本，npc_profiles 还应补充 speech_style、emotion_baseline、body_language、accusation_style、defense_style、allowed_suspicion_targets、forbidden_fact_patterns 等字段。
 8. clues 必须包含 id、title、content、visibility。
 9. clue_type、importance、related_target_ids、reasoning_tags、search_keywords 都是可选字段。
 10. investigation_targets 必须包含 id、name、type、description、search_keywords、discoverable_clue_ids。
@@ -291,6 +292,9 @@ LLM 可能生成不合法 JSON。
 12. HIDDEN 线索是否没有承担主线推理必需作用。
 13. PUBLIC 线索是否没有直接泄露真凶或完整手法。
 14. NPC 证言是否没有直接泄露真凶或完整手法。
+14.1 NPC 是否没有把主观怀疑包装成客观证据结论。
+14.2 NPC 是否没有主动新增剧本中不存在的证据级事实。
+14.3 NPC 的撕逼、甩锅和怀疑是否来自 allowed_suspicion_targets、known_facts、relationship_attitudes 或角色偏见。
 15. 关键证据是否分散在 BODY、ROOM、ITEM 等调查对象中。
 16. 是否存在一个调查对象一次性解锁过多关键线索的问题。
 17. 是否存在真相无法从线索推出的问题。
@@ -376,6 +380,21 @@ scripts/neon_tower_locked_room.json
 ```
 
 ---
+
+
+### 8.5 V0.2.1 NPC 人性化与边界检查
+
+```text
+[ ] 每个 NPC 是否有 speech_style / emotion_baseline / body_language 等表演素材
+[ ] 每个 NPC 是否有 accusation_style / defense_style
+[ ] 每个 NPC 的 allowed_suspicion_targets 是否解释了他可以怀疑谁
+[ ] 每个 NPC 的 known_facts 是否只包含他可以明确陈述的事实
+[ ] 每个 NPC 的 forbidden_fact_patterns 是否限制了不能主动说出的证据级事实
+[ ] 凶手 NPC 是否不会主动确认作案手法、死因机制或关键证据链
+[ ] 技术型 NPC 是否不会越权解释药剂、医学或其他非本专业事实
+[ ] 安保型 NPC 是否不会越权解释药剂、尸检或完整作案手法
+[ ] NPC 是否可以主观撕逼，但不会说“证据已经证明”“标准答案是”
+```
 
 ## 9. 第五步：放入项目运行验证
 
@@ -670,4 +689,80 @@ V0.2.0 阶段最重要的不是生成大剧本，而是验证：
 
 ```text
 玩家能通过调查对象发现线索，并基于轻量案件笔记完成一次可解释评分的推理。
+```
+
+
+---
+
+## 14. V0.2.1 NPCProfile 常见错误
+
+### 14.1 把真相机制放进 known_facts
+
+错误示例：
+
+```json
+"known_facts": [
+  "她知道药剂会造成呼吸抑制死亡。"
+]
+```
+
+如果该 NPC 不应该主动说明死因机制，应改成：
+
+```json
+"known_facts": [
+  "她知道神经稳定剂属于高风险测试辅助药物，但不会在没有检测报告时主动说明具体致死机制。"
+],
+"forbidden_fact_patterns": [
+  "不能主动确认死者死于呼吸抑制。",
+  "不能主动解释药剂导致死亡的机制。"
+]
+```
+
+### 14.2 只写 personality，不写表演字段
+
+`personality` 太粗，容易让 NPC 回答趋同。建议补充：
+
+```text
+speech_style
+emotion_baseline
+body_language
+accusation_style
+defense_style
+verbal_tics
+```
+
+### 14.3 允许 NPC 撕逼，但没有 allowed_suspicion_targets
+
+如果 NPC 可以怀疑某人，应明确配置：
+
+```json
+"allowed_suspicion_targets": [
+  {
+    "target_id": "npc_lu_chen",
+    "target_name": "陆沉",
+    "attitude": "strong_suspicion",
+    "reason": "陆沉案发当晚出现在第 47 层附近，身份背景复杂。",
+    "allowed_intensity": "strong_subjective"
+  }
+]
+```
+
+否则 LLM 容易自由发挥，把怀疑对象和理由编得很像真相。
+
+### 14.4 把主观怀疑写成客观结论
+
+允许：
+
+```text
+我看就是他。
+我不信她清白。
+他那晚出现得太巧了。
+```
+
+不允许：
+
+```text
+证据已经证明他就是凶手。
+标准答案就是她。
+完整作案手法是……
 ```
