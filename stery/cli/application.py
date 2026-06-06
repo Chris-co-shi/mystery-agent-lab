@@ -9,18 +9,14 @@ from stery.npc.npc_interaction_service import NPCInteractionService
 from stery.judge.rule_judge import RuleJudge
 from stery.application.session_recorder import SessionRecorder
 from stery.case.case_recorder import CaseRecorder
-
+from stery.cli.commands import normalize_command, show_help
+from stery.cli.investigate_flow import InvestigateFlow
+from stery.cli.search_flow import SearchFlow
 from stery.cli.case_presenter import (
     _show_case_discovered_clues,
     _show_case_evidence_candidates,
     _show_case_investigated_targets,
     _show_case_npc_questions,
-)
-from stery.cli.presenters import (
-    _build_clue_title_by_id,
-    _format_clue_ids_for_score,
-    _show_score_breakdown,
-    show_known_info_search_result,
 )
 from stery.cli.review_presenter import (
     _get_record_metadata,
@@ -28,7 +24,6 @@ from stery.cli.review_presenter import (
     _show_clue_id_list,
 )
 from stery.cli.selectors import (
-    _prompt_key_evidence_ids,
     _resolve_character_id,
 )
 
@@ -44,94 +39,6 @@ def _part_get(part, key: str, default=None):
         return part.get(key, default)
 
     return getattr(part, key, default)
-
-def show_help() -> None:
-    """
-    展示玩家可用命令。
-
-    命令分组原则：
-    1. 案件基础信息：帮助玩家理解故事。
-    2. 玩家行动：会改变游戏状态。
-    3. 已知信息复盘：只读视图，帮助玩家整理推理。
-    4. 状态与流程：查看进度、提交、退出。
-
-    /history 不再作为玩家核心命令展示。
-    兼容旧输入时，/history 会被映射到 /review。
-    """
-
-    print("\n========== 可用命令 ==========")
-
-    print("\n【案件信息】")
-    print("/background   查看案件背景")
-    print("/characters   查看人物列表")
-
-    print("\n【玩家行动】")
-    print("/investigate  调查地点、尸体或物品")
-    print("/ask          询问 NPC")
-
-    print("\n【已知信息】")
-    print("/clues        查看已发现线索")
-    print("/search       检索已知信息")
-    print("/case         查看案件笔记本")
-    print("/review       查看调查记录")
-
-    print("\n【流程】")
-    print("/status       查看当前进度")
-    print("/submit       提交最终推理")
-    print("/help         查看命令帮助")
-    print("/quit         退出游戏")
-
-    print("\n==============================")
-
-
-def _normalize_command(raw: str) -> str:
-    """
-    规范化玩家输入的命令。
-
-    设计说明：
-    - 玩家可以输入 /command，也可以输入不带斜杠的 command。
-    - 中文别名只保留少量高频入口，避免命令体系继续膨胀。
-    - /history 已降级为兼容命令，统一转到 /review。
-    """
-
-    aliases = {
-        "help": "/help",
-        "status": "/status",
-        "background": "/background",
-        "characters": "/characters",
-        "clues": "/clues",
-        "search": "/search",
-        "investigate": "/investigate",
-        "调查": "/investigate",
-        "ask": "/ask",
-        "history": "/review",
-        "历史": "/review",
-        "review": "/review",
-        "summary": "/review",
-        "case": "/case",
-        "notebook": "/case",
-        "笔记": "/case",
-        "submit": "/submit",
-        "quit": "/quit",
-        "exit": "/quit",
-    }
-
-    command = raw.strip()
-
-    if not command:
-        return ""
-
-    # 不带 / 的输入，按别名解析。
-    # 如果不是已知别名，也原样返回给 handle_command，让它走“未知命令”提示。
-    # 不要返回空字符串，否则玩家输错命令会被误判为退出。
-    if not command.startswith("/"):
-        return aliases.get(command, command)
-
-    # 带 / 的旧命令兼容。
-    if command == "/history":
-        return "/review"
-
-    return command
 
 
 class Application:
@@ -188,7 +95,7 @@ class Application:
         show_help()
         while True:
             raw_input = input("\n> ")
-            command = _normalize_command(raw_input)
+            command = normalize_command(raw_input)
 
             should_continue = self.handle_command(command)
 
@@ -212,34 +119,6 @@ class Application:
         print(f"是否已提交最终推理：{'是' if state.final_vote is not None else '否'}")
         print(f"是否已结束：{'是' if state.is_finished else '否'}")
 
-    def show_investigation_targets(self) -> None:
-        """
-        展示当前剧本中的可调查对象。
-
-        玩家层不展示内部 ID。
-        原因：
-        - ID 是系统内部关联字段。
-        - 普通玩家应该通过编号 / 名称 / 关键词选择。
-        - ID 仍然允许作为输入，但不主动暴露在界面上。
-        """
-
-        print("\n【可调查对象】")
-
-        targets = self.investigation_service.list_targets()
-
-        if not targets:
-            print("当前剧本暂无可调查对象。")
-            return
-
-        for index, target in enumerate(targets, start=1):
-            target_type = self._format_enum_value(target.type)
-
-            print(f"{index}. {target.name}（{target_type}）")
-            print(f"   描述：{target.description}")
-
-            if target.search_keywords:
-                print(f"   关键词：{'、'.join(target.search_keywords)}")
-
     def investigate_target(self) -> None:
         """
         执行一次调查。
@@ -251,59 +130,11 @@ class Application:
         - 不把内部 ID 暴露给普通玩家。
         """
 
-        print("\n【调查对象】")
-
-        state = self.runtime.state
-
-        if state is None:
-            print("游戏尚未开始。")
-            return
-
-        targets = self.investigation_service.list_targets()
-
-        if not targets:
-            print("当前剧本暂无可调查对象。")
-            return
-
-        self.show_investigation_targets()
-
-        target_id: str | None = None
-
-        while target_id is None:
-            raw_target = input("\n请输入要调查的对象编号或名称（输入 q 取消）：").strip()
-
-            if raw_target.lower() in {"q", "quit", "exit"} or raw_target in {"取消", "退出"}:
-                print("已取消调查。")
-                return
-
-            if not raw_target:
-                print("调查对象不能为空。")
-                continue
-
-            target_id = self._resolve_investigation_target_id(
-                raw=raw_target,
-                targets=targets,
-            )
-
-            if target_id is None:
-                print("请重新输入调查对象编号或名称。")
-
-        try:
-            result = self.investigation_service.investigate(
-                state=state,
-                target_id=target_id,
-            )
-
-            self.case_recorder.record_investigation(
-                state=state,
-                result=result,
-            )
-
-        except Exception as exc:
-            print(f"调查失败：{exc}")
-            return
-
-        self.show_investigation_result(result)
+        InvestigateFlow(
+            runtime=self.runtime,
+            investigation_service=self.investigation_service,
+            case_recorder=self.case_recorder,
+        ).run()
 
     def show_review(self) -> None:
         """
@@ -439,42 +270,11 @@ class Application:
         - 展示层仍会过滤历史 SEARCH 记录，防止旧搜索记录污染后续搜索。
         """
 
-        print("\n【检索已知信息】")
-        keyword = input("请输入你要检索的关键词：").strip()
-
-        if not keyword:
-            print("搜索关键词不能为空。")
-            return
-
-        state = self.runtime.state
-
-        if state is None:
-            print("游戏尚未开始。")
-            return
-
-        try:
-            result = self.known_info_search_service.search(
-                state=state,
-                keyword=keyword,
-            )
-
-        except Exception as exc:
-            print(f"检索失败：{exc}")
-            return
-
-        show_known_info_search_result(result)
-
-        # 记录搜索行为必须放在检索之后。
-        # 否则本次搜索会把“玩家搜索了：xxx”也搜出来。
-        try:
-            self.case_recorder.record_search(
-                state=state,
-                target=keyword,
-            )
-        except Exception as exc:
-            # 记录失败不应该影响玩家看到检索结果。
-            # 这里给出提示，但不终止游戏。
-            print(f"\n提示：搜索记录写入失败：{exc}")
+        SearchFlow(
+            runtime=self.runtime,
+            known_info_search_service=self.known_info_search_service,
+            case_recorder=self.case_recorder,
+        ).run()
 
     def ask_npc(self) -> None:
         """
@@ -802,111 +602,3 @@ class Application:
             if not getattr(character, "is_victim", False)
         ]
 
-    def _resolve_investigation_target_id(self, raw: str, targets) -> str | None:
-        """
-        将玩家输入解析为 investigation_target_id。
-
-        支持：
-        1. 编号：1、2、3
-        2. 名称：沈维舟的尸体
-        3. 关键词：尸体、注入器、终端
-        4. ID：target_body，兼容开发调试，但界面不主动展示 ID
-
-        如果匹配多个对象，不自动猜测，提示玩家继续输入编号。
-        """
-
-        value = raw.strip()
-
-        if not value:
-            return None
-
-        # 1. 编号选择。
-        if value.isdigit():
-            index = int(value)
-
-            if 1 <= index <= len(targets):
-                return targets[index - 1].id
-
-            print(f"无效编号：{value}。请输入 1 到 {len(targets)} 之间的数字。")
-            return None
-
-        # 2. 精确匹配 ID 或名称。
-        # ID 不主动展示，但仍允许高级玩家输入。
-        for target in targets:
-            if value == target.id or value == target.name:
-                return target.id
-
-        # 3. 名称 / 关键词模糊匹配。
-        matched_targets = []
-        normalized_value = value.lower()
-
-        for target in targets:
-            target_name = target.name.lower()
-            target_keywords = [
-                keyword.lower()
-                for keyword in target.search_keywords
-            ]
-
-            if normalized_value in target_name:
-                matched_targets.append(target)
-                continue
-
-            if any(normalized_value in keyword for keyword in target_keywords):
-                matched_targets.append(target)
-
-        if len(matched_targets) == 1:
-            return matched_targets[0].id
-
-        if len(matched_targets) > 1:
-            print("匹配到多个调查对象，请输入上方编号：")
-
-            for target in matched_targets:
-                index = targets.index(target) + 1
-                target_type = self._format_enum_value(target.type)
-                print(f"{index}. {target.name}（{target_type}）")
-
-            return None
-
-        print(f"未找到匹配的调查对象：{value}")
-        return None
-
-    def _format_enum_value(self, value) -> str:
-        """
-        格式化枚举值。
-
-        InvestigationTarget.type 是 Enum。
-        这里统一转换成字符串，避免 CLI 直接打印 InvestigationTargetType.BODY。
-        """
-
-        return str(getattr(value, "value", value))
-
-    def show_investigation_result(self, result) -> None:
-        """
-        展示 InvestigationResult。
-
-        展示原则：
-        - 新发现线索：展示标题、ID、内容。
-        - 已发现过线索：展示标题和 ID，避免重复刷内容。
-        - HIDDEN 跳过信息：不展示隐藏线索 ID 和内容。
-        """
-
-        print("\n【调查结果】")
-        print(f"调查对象：{result.target_name}（{result.target_type}）")
-        print(f"描述：{result.target_description}")
-        print(result.message)
-
-        if result.newly_discovered_clues:
-            print("\n【新发现线索】")
-            for clue in result.newly_discovered_clues:
-                print(f"- {clue.title}")
-                print(f"  ID：{clue.id}")
-                print(f"  内容：{clue.content}")
-
-        if result.already_discovered_clues:
-            print("\n【已发现过的线索】")
-            for clue in result.already_discovered_clues:
-                print(f"- {clue.title}")
-                print(f"  ID：{clue.id}")
-
-        if result.skipped_hidden_clue_ids:
-            print("\n提示：有些信息暂时无法通过普通调查确认。")
