@@ -2,6 +2,7 @@ from stery.application.game_runtime import GameRuntime
 from stery.case.case_notebook_service import CaseNotebookService
 from stery.case.known_info_search_service import KnownInfoSearchService
 from stery.cli.ask_flow import  AskFlow
+from stery.cli.submit_flow import SubmitFlow
 from stery.clue import ClueSearchService
 from stery.investigation.investigation_service import InvestigationService
 from stery.npc.npc_interaction_service import NPCInteractionService
@@ -517,116 +518,13 @@ class Application:
             False 表示提交失败或被中断，游戏继续。
         """
 
-        print("\n【提交最终推理】")
-
-        state = self.runtime.state
-
-        if state is None:
-            print("游戏尚未开始。")
-            return False
-
-        # 1. 提交前展示案件笔记本。
-        #
-        # 这一步解决玩家提交前看不到线索、问答和调查记录的问题。
-        # 注意：show_case_notebook() 只读状态，不会修改 GameState。
-        print("\n提交前请先复盘当前案件笔记：")
-        self.show_case_notebook()
-
-        # 2. 构建 notebook，后续用于证据候选选择。
-        notebook = self.case_notebook_service.build(state)
-
-        # 3. 选择凶手。
-        suspect_character_id = self._prompt_suspect_character_id()
-
-        if suspect_character_id is None:
-            return False
-
-        # 4. 输入动机和手法。
-        motive = input("请输入作案动机：").strip()
-        method = input("请输入作案手法：").strip()
-
-        if not motive:
-            print("作案动机不能为空。")
-            return False
-
-        if not method:
-            print("作案手法不能为空。")
-            return False
-
-        # 5. 选择关键证据。
-        key_evidence = _prompt_key_evidence_ids(notebook)
-
-        if key_evidence is None:
-            return False
-
-        try:
-            state = self.runtime.submit_final_vote(
-                suspect_character_id=suspect_character_id,
-                motive=motive,
-                method=method,
-                key_evidence=key_evidence,
-            )
-
-        except Exception as exc:
-            print(f"提交失败：{exc}")
-            return False
-
-        if state.final_vote is None:
-            print("提交失败：最终推理为空。")
-            return False
-
-        result = self.rule_judge.evaluate_final_vote(state.final_vote)
-
-        self.case_recorder.record_submit(
-            state=state,
-            accused_npc_id=suspect_character_id,
-            accused_npc_name=self._get_character_name(suspect_character_id),
-            evidence_clue_ids=key_evidence,
-            reasoning=f"动机：{motive}\n手法：{method}",
-            judge_result="CORRECT" if result.is_correct else "INCORRECT",
-        )
-
-        print("\n【推理结果】")
-        print(f"是否完全正确：{result.is_correct}")
-        print(f"是否命中凶手：{result.matched_murderer}")
-
-        clue_title_by_id = _build_clue_title_by_id(self.runtime.script)
-        matched_key_clue_titles = _format_clue_ids_for_score(
-            getattr(result, "matched_key_clue_ids", []) or [],
-            clue_title_by_id,
-        )
-        print(
-            "命中的关键线索："
-            f"{'、'.join(matched_key_clue_titles) if matched_key_clue_titles else '无'}"
-        )
-        print(f"得分：{result.score}/{result.max_score}")
-        print(f"说明：{result.reason}")
-
-        _show_score_breakdown(
-            result,
-            script=self.runtime.script,
-        )
-
-        print("\n【真相复盘】")
-        print(self.runtime.script.truth.summary)
-
-        self.runtime.finish()
-
-        if self.runtime.state is None:
-            print("会话记录生成失败：游戏状态不存在。")
-            return True
-
-        record_result = self.session_recorder.save(
-            script=self.runtime.script,
-            state=self.runtime.state,
-            judge_result=result,
-        )
-
-        print("\n【会话记录】")
-        print(f"JSON：{record_result.json_path}")
-        print(f"Markdown：{record_result.markdown_path}")
-
-        return True
+        return SubmitFlow(
+            runtime=self.runtime,
+            rule_judge=self.rule_judge,
+            case_notebook_service=self.case_notebook_service,
+            case_recorder=self.case_recorder,
+            session_recorder=self.session_recorder,
+        ).run()
 
     def handle_command(self, command: str) -> bool:
         """
