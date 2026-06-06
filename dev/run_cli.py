@@ -1,7 +1,8 @@
 from bootstrap import bootstrap_project
 
-bootstrap_project()
 
+bootstrap_project()
+from stery.cli import Application
 from stery.clue.clue_search_service import ClueSearchService
 from dotenv import load_dotenv
 import argparse
@@ -9,7 +10,6 @@ from stery.agents import NPCAgent
 from stery.application.game_runtime import GameRuntime
 from stery.npc.npc_interaction_service import NPCInteractionService
 from stery.judge.rule_judge import RuleJudge
-from stery.interfaces.cli import MysteryCliApp
 from stery.llm.base import LLMClient
 from stery.config.paths import ENV_FILE
 from stery.script_repository import LocalFileScriptRepository, ScriptRepository
@@ -63,7 +63,7 @@ def main() -> None:
 
     rule_judge = RuleJudge(script)
 
-    app = MysteryCliApp(
+    app = Application(
         runtime=runtime,
         npc_interaction_service=npc_interaction_service,
         rule_judge=rule_judge,

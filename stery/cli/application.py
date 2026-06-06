@@ -851,7 +851,7 @@ def _normalize_command(raw: str) -> str:
     return command
 
 
-class MysteryCliApp:
+class Application:
     """
     剧本杀命令行应用。
 
@@ -1239,53 +1239,323 @@ class MysteryCliApp:
 
     def ask_npc(self) -> None:
         """
-        询问 NPC。
+        进入 NPC 询问模式。
 
-        V0.2.0 交互优化：
-        - 玩家不再必须复制 NPC ID。
-        - 支持输入编号、姓名或 ID。
-        - NPC 回答会记录到 case_records，后续可在 /review 和 /case 中查看。
+        V0.2.2 交互设计：
+        - 玩家进入 /ask 后，先选择一个可询问 NPC。
+        - 选择后进入连续问答模式。
+        - 在连续问答中可以：
+            1. 直接输入问题，继续问当前 NPC。
+            2. 输入 @NPC姓名 / @NPC编号 / @NPC ID 快速切换 NPC。
+            3. 输入 /switch 手动切换 NPC。
+            4. 输入 /list 查看可询问 NPC。
+            5. 输入 /help 查看询问模式帮助。
+            6. 输入 q / quit / exit / 返回 / 退出 返回主命令。
 
         注意：
-        - NPC 回答属于“证言”，不等价于事实。
-        - NPC 可能说谎、回避、主观怀疑或被玩家诱导。
-        - 防泄底、防编造仍然由 NPCInteractionService / Guardrail 负责。
+        - /ask 模式只处理 NPC 问答。
+        - 不在 /ask 内部嵌套 /investigate、/search、/case、/submit 等主命令。
+        - 这样可以避免 CLI 变成复杂子系统。
         """
 
         print("\n【询问 NPC】")
 
-        # /ask 的候选对象必须是“真正可对话的 NPC”，不能直接使用全部 characters。
-        # characters 里可能包含死者，例如 victim_shen_weizhou；
-        # 但 NPCInteractionService 只接受存在 npc_profile 的角色。
+        # 只允许询问真正可对话的 NPC。
+        # 不要复用 show_characters()，否则死者、受害者、背景人物也会进入候选列表。
         candidates = self._get_askable_npc_candidates()
 
         if not candidates:
-            print("当前没有可询问 NPC。")
+            print("当前没有可询问的 NPC。")
             return
 
         self.show_askable_npcs(candidates)
 
-        raw_target = input("\n请输入要询问的 NPC 编号、姓名或 ID：").strip()
-        question = input("请输入你的问题：").strip()
+        current_character_id = self._select_askable_npc(
+            candidates=candidates,
+            prompt_text="\n请输入要询问的 NPC 编号、姓名或 ID：",
+        )
 
-        if not raw_target or not question:
-            print("询问对象和问题不能为空。")
+        if current_character_id is None:
+            print("已取消询问。")
             return
 
-        target_character_id = _resolve_character_id(
-            raw=raw_target,
+        self._run_ask_loop(
+            current_character_id=current_character_id,
             candidates=candidates,
         )
 
-        if target_character_id is None:
+    def _select_askable_npc(
+            self,
+            *,
+            candidates,
+            prompt_text: str,
+    ) -> str | None:
+        """
+        从可询问 NPC 列表中选择一个 NPC。
+
+        支持：
+        - 编号：1
+        - 姓名：陆沉
+        - ID：npc_lu_chen
+        - @姓名：@陆沉
+
+        返回：
+            character_id：选择成功
+            None：玩家取消
+        """
+
+        while True:
+            raw_target = input(prompt_text).strip()
+
+            if raw_target.lower() in {"q", "quit", "exit"} or raw_target in {"返回", "退出", "取消"}:
+                return None
+
+            if raw_target in {"/list", "list", "名单"}:
+                self.show_askable_npcs(candidates)
+                continue
+
+            if raw_target in {"/help", "help", "?", "？"}:
+                self._show_ask_mode_help()
+                continue
+
+            if not raw_target:
+                print("NPC 不能为空。")
+                continue
+
+            # 允许玩家输入 @陆沉 这种形式。
+            if raw_target.startswith("@"):
+                raw_target = raw_target[1:].strip()
+
+            if not raw_target:
+                print("NPC 不能为空。")
+                continue
+
+            target_character_id = _resolve_character_id(
+                raw=raw_target,
+                candidates=candidates,
+            )
+
+            if target_character_id is not None:
+                return target_character_id
+
+            print("请重新输入 NPC 编号、姓名或 ID。")
+
+    def _run_ask_loop(
+            self,
+            *,
+            current_character_id: str,
+            candidates,
+    ) -> None:
+        """
+        NPC 连续问答循环。
+
+        current_character_id：
+            当前正在询问的 NPC。
+
+        candidates：
+            当前剧本可询问 NPC 列表。
+
+        循环行为：
+        - 普通文本：作为问题发给当前 NPC。
+        - @NPC：切换 NPC。
+        - /switch：切换 NPC。
+        - /list：查看 NPC 列表。
+        - /help：查看询问模式帮助。
+        - q：退出询问模式。
+        """
+
+        current_name = self._get_character_name(current_character_id)
+
+        print(f"\n【正在询问：{current_name}】")
+        self._show_ask_mode_help()
+
+        while True:
+            current_name = self._get_character_name(current_character_id)
+            raw_input_text = input(f"\n你({current_name})：").strip()
+
+            if not raw_input_text:
+                print("问题不能为空。")
+                continue
+
+            command_result = self._handle_ask_mode_command(
+                raw_input_text=raw_input_text,
+                current_character_id=current_character_id,
+                candidates=candidates,
+            )
+
+            current_character_id = command_result["current_character_id"]
+
+            # should_continue=False 表示退出 /ask 模式，回到主命令。
+            if not command_result["should_continue"]:
+                return
+
+            # consumed=True 表示这次输入是 /switch、/list、@NPC 等内部命令，
+            # 不应该再当作玩家问题发给 NPC。
+            if command_result["consumed"]:
+                continue
+
+            self._ask_current_npc_once(
+                target_character_id=current_character_id,
+                question=raw_input_text,
+            )
+
+    def _handle_ask_mode_command(
+            self,
+            *,
+            raw_input_text: str,
+            current_character_id: str,
+            candidates,
+    ) -> dict:
+        """
+        处理 /ask 模式内部命令。
+
+        返回 dict：
+            {
+                "current_character_id": str,
+                "should_continue": bool,
+                "consumed": bool,
+            }
+
+        字段说明：
+        - current_character_id：当前 NPC，可能被切换。
+        - should_continue：是否继续停留在 /ask 模式。
+        - consumed：本次输入是否已经被内部命令消费。
+          如果 consumed=False，外层会把这段输入当作普通问题发送给 NPC。
+        """
+
+        text = raw_input_text.strip()
+        lower_text = text.lower()
+
+        # 1. 退出询问模式。
+        if lower_text in {"q", "quit", "exit"} or text in {"返回", "退出", "结束"}:
+            print("已退出询问模式。")
+            return {
+                "current_character_id": current_character_id,
+                "should_continue": False,
+                "consumed": True,
+            }
+
+        # 2. 显示询问模式帮助。
+        if text in {"/help", "help", "?", "？"}:
+            self._show_ask_mode_help()
+            return {
+                "current_character_id": current_character_id,
+                "should_continue": True,
+                "consumed": True,
+            }
+
+        # 3. 查看可询问 NPC。
+        if text in {"/list", "list", "名单"}:
+            self.show_askable_npcs(candidates)
+            return {
+                "current_character_id": current_character_id,
+                "should_continue": True,
+                "consumed": True,
+            }
+
+        # 4. 手动切换 NPC。
+        if text in {"/switch", "switch", "切换"}:
+            self.show_askable_npcs(candidates)
+
+            new_character_id = self._select_askable_npc(
+                candidates=candidates,
+                prompt_text="\n请输入要切换的 NPC 编号、姓名或 ID：",
+            )
+
+            if new_character_id is None:
+                print("已取消切换，继续询问当前 NPC。")
+                return {
+                    "current_character_id": current_character_id,
+                    "should_continue": True,
+                    "consumed": True,
+                }
+
+            print(f"【已切换到：{self._get_character_name(new_character_id)}】")
+
+            return {
+                "current_character_id": new_character_id,
+                "should_continue": True,
+                "consumed": True,
+            }
+
+        # 5. 快速切换 NPC：@祁曼殊 / @1 / @npc_qi_manshu
+        if text.startswith("@"):
+            raw_target = text[1:].strip()
+
+            if not raw_target:
+                print("请输入要切换的 NPC，例如：@陆沉。")
+                return {
+                    "current_character_id": current_character_id,
+                    "should_continue": True,
+                    "consumed": True,
+                }
+
+            new_character_id = _resolve_character_id(
+                raw=raw_target,
+                candidates=candidates,
+            )
+
+            if new_character_id is None:
+                return {
+                    "current_character_id": current_character_id,
+                    "should_continue": True,
+                    "consumed": True,
+                }
+
+            print(f"【已切换到：{self._get_character_name(new_character_id)}】")
+
+            return {
+                "current_character_id": new_character_id,
+                "should_continue": True,
+                "consumed": True,
+            }
+
+        # 6. 在 /ask 模式里不支持其他主命令。
+        #
+        # 例如玩家输入 /case、/search、/submit，不要把它发给 NPC，
+        # 也不要在 /ask 内部嵌套执行主命令。
+        # 玩家应先 q 返回主命令，再执行这些命令。
+        if text.startswith("/"):
+            print("询问模式下只支持 /help、/list、/switch。")
+            print("如需调查、搜索、查看案件笔记或提交推理，请先输入 q 返回主命令。")
+
+            return {
+                "current_character_id": current_character_id,
+                "should_continue": True,
+                "consumed": True,
+            }
+
+        # 7. 普通输入，不是内部命令，交给外层作为问题发送给 NPC。
+        return {
+            "current_character_id": current_character_id,
+            "should_continue": True,
+            "consumed": False,
+        }
+
+    def _ask_current_npc_once(
+            self,
+            *,
+            target_character_id: str,
+            question: str,
+    ) -> None:
+        """
+        向当前 NPC 提出一个问题，并记录问答。
+
+        这个方法只处理“一问一答”的业务调用。
+        外层的连续问答、切换 NPC、退出询问模式，都由 _run_ask_loop() 负责。
+
+        为什么拆出来：
+        - 询问模式控制逻辑和业务调用分离。
+        - 后续拆分 CLI 文件时，这个方法可以移动到 ask_flow.py。
+        """
+
+        state = self.runtime.state
+
+        if state is None:
+            print("游戏尚未开始。")
             return
 
         try:
-            state = self.runtime.state
-            if state is None:
-                print("游戏尚未开始。")
-                return
-
             result = self.npc_interaction_service.ask_npc(
                 target_character_id=target_character_id,
                 question=question,
@@ -1298,12 +1568,26 @@ class MysteryCliApp:
                 question=result.question,
                 answer=result.npc_answer,
             )
+
         except Exception as exc:
             print(f"询问失败：{exc}")
             return
 
-        print("\n【NPC 回答】")
+        print(f"\n【{self._get_character_name(result.target_character_id)}】")
         print(result.npc_answer)
+
+    def _show_ask_mode_help(self) -> None:
+        """
+        显示 /ask 询问模式帮助。
+        """
+
+        print("\n【询问模式】")
+        print("直接输入问题：继续询问当前 NPC")
+        print("@NPC姓名 / @编号 / @ID：快速切换 NPC")
+        print("/switch：选择并切换 NPC")
+        print("/list：查看可询问 NPC")
+        print("/help：查看询问模式帮助")
+        print("q / quit / exit / 返回 / 退出：返回主命令")
 
     def submit_final_vote(self) -> bool:
         """
